@@ -1,0 +1,706 @@
+import 'package:flutter/material.dart';
+
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/empty_state_card.dart';
+import '../../../../core/widgets/stat_card.dart';
+import '../../../../core/widgets/status_badge.dart';
+import '../../../chat/presentation/pages/chat_room_page.dart';
+import '../../../tracking/presentation/pages/live_tracking_page.dart';
+
+class SopirDashboardPage extends StatefulWidget {
+  const SopirDashboardPage({super.key});
+
+  @override
+  State<SopirDashboardPage> createState() => _SopirDashboardPageState();
+}
+
+class _SopirDashboardPageState extends State<SopirDashboardPage> {
+  int _currentNavIndex = 0;
+  bool _isAvailable = true;
+  bool _hasActiveTask = true;
+
+  // Status perjalanan: 0: Menuju Lokasi, 1: Tiba di Lokasi, 2: Menuju Tujuan, 3: Layanan Selesai
+  int _currentTripStep = 0;
+
+  final List<String> _tripSteps = [
+    'Menuju lokasi penjemputan',
+    'Tiba di lokasi penjemputan',
+    'Menuju tujuan (RS/Faskes)',
+    'Layanan selesai',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: _currentNavIndex == 0
+            ? _buildHomeTab(context)
+            : _buildOtherTab(context),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentNavIndex,
+        onTap: (index) {
+          setState(() {
+            _currentNavIndex = index;
+          });
+        },
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textSecondary,
+        selectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 11,
+        ),
+        unselectedLabelStyle: const TextStyle(fontSize: 11),
+        backgroundColor: Colors.white,
+        elevation: 8,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard_rounded),
+            label: 'Beranda',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.assignment_turned_in_rounded),
+            label: 'Tugas Saya',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history_rounded),
+            label: 'Riwayat',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline_rounded),
+            label: 'Chat',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline_rounded),
+            label: 'Profil',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHomeTab(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. Header: Sapaan, Nama Sopir, Notifikasi
+          _buildHeader(),
+          const SizedBox(height: 14),
+
+          // 2. Badge Status Sopir (Tersedia / Sedang Bertugas) dengan Toggle
+          _buildDriverStatusBadgeCard(),
+          const SizedBox(height: 16),
+
+          // 3. Tiga Kartu Ringkasan
+          _buildThreeSummaryCards(),
+          const SizedBox(height: 18),
+
+          // 4, 5 & 6. Card "Tugas Aktif", Peta Navigasi, dan Tombol Pembaruan Status
+          _buildActiveTaskSection(context),
+          const SizedBox(height: 20),
+
+          // 7. Daftar Tugas Terbaru
+          _buildRecentTasksSection(),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  // 1. Header
+  Widget _buildHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            const CircleAvatar(
+              radius: 22,
+              backgroundColor: Color(0xFFFFEBEE),
+              child: Icon(
+                Icons.drive_eta_rounded,
+                color: AppColors.primary,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Siap Siaga Bertugas,',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                Text(
+                  'Joko Susilo',
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        IconButton(
+          icon: const Icon(
+            Icons.notifications_none_rounded,
+            color: AppColors.textPrimary,
+          ),
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Tidak ada notifikasi darurat baru'),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  // 2. Badge Status Sopir
+  Widget _buildDriverStatusBadgeCard() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: _isAvailable ? AppColors.success : AppColors.warning,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Status Kesiapan Sopir',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  Text(
+                    _isAvailable
+                        ? 'Tersedia untuk Penugasan'
+                        : 'Sedang Bertugas di Lapangan',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: _isAvailable
+                          ? AppColors.success
+                          : AppColors.warning,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          Switch.adaptive(
+            value: _isAvailable,
+            activeTrackColor: AppColors.success.withValues(alpha: 0.5),
+            activeThumbColor: AppColors.success,
+            onChanged: (val) {
+              setState(() {
+                _isAvailable = val;
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 3. Tiga Kartu Ringkasan
+  Widget _buildThreeSummaryCards() {
+    return Row(
+      children: [
+        Expanded(
+          child: StatCard(
+            title: 'Tugas Aktif',
+            value: _hasActiveTask ? '1' : '0',
+            icon: Icons.emergency_rounded,
+            color: AppColors.primary,
+            subtitle: _hasActiveTask ? 'Prioritas Tinggi' : 'Siap terima',
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: StatCard(
+            title: 'Tugas Selesai',
+            value: '4',
+            icon: Icons.check_circle_outline_rounded,
+            color: AppColors.success,
+            subtitle: 'Hari ini',
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: StatCard(
+            title: 'Armada',
+            value: 'BBM 85%',
+            icon: Icons.local_gas_station_rounded,
+            color: AppColors.secondary,
+            subtitle: 'AB 1199 MED',
+          ),
+        ),
+      ],
+    );
+  }
+
+  // 4, 5 & 6. Card Tugas Aktif, Peta Navigasi, dan Tombol Tindakan Status
+  Widget _buildActiveTaskSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Tugas Aktif Saat Ini',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() => _hasActiveTask = !_hasActiveTask);
+              },
+              child: Text(
+                _hasActiveTask ? 'Simulasi Kosong' : 'Simulasi Ada Tugas',
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        if (!_hasActiveTask)
+          EmptyStateCard(
+            icon: Icons.event_available_rounded,
+            title: 'Belum ada tugas aktif',
+            message: 'Tetap stanby di pangkalan ambulans. Penugasan baru dari call center akan muncul di sini.',
+            buttonText: 'Cek Kesiapan Armada',
+            onButtonPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Armada AB 1199 MED dalam kondisi prima & siap jalan.',
+                  ),
+                ),
+              );
+            },
+          )
+        else
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 4. Nomor Pesanan & Status Perjalanan
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      '#ORD-20261023-01',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    StatusBadge.warning(
+                      _tripSteps[_currentTripStep],
+                      icon: Icons.navigation_rounded,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Lokasi Penjemputan & Tujuan
+                _buildRouteRow(
+                  pickup: 'Jl. Malioboro No. 42 (Bpk. Budi Pratama)',
+                  destination: 'IGD RSUP Dr. Sardjito, Yogyakarta',
+                ),
+                const SizedBox(height: 14),
+
+                // 5. Placeholder Peta Navigasi
+                Container(
+                  height: 110,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.blueGrey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.map_rounded,
+                              size: 34,
+                              color: Colors.blueGrey.shade400,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Navigasi Rute Cepat: 3.2 km (Est. 8 Menit)',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blueGrey.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Positioned(
+                        right: 8,
+                        bottom: 8,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const LiveTrackingPage(
+                                  orderId: 'ORD-20261023-01',
+                                ),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.secondary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          icon: const Icon(Icons.fullscreen, size: 14),
+                          label: const Text(
+                            'Buka Peta',
+                            style: TextStyle(fontSize: 11),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // 6. Tombol Tindakan untuk Memperbarui Status Perjalanan
+                const Text(
+                  'Perbarui Status Perjalanan:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Step Progress Indicator
+                Row(
+                  children: List.generate(_tripSteps.length, (index) {
+                    final isDone = index <= _currentTripStep;
+                    return Expanded(
+                      child: Container(
+                        height: 4,
+                        margin: EdgeInsets.only(
+                          right: index < _tripSteps.length - 1 ? 4 : 0,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDone ? AppColors.primary : AppColors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 12),
+
+                // Action Button to progress status
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            if (_currentTripStep < _tripSteps.length - 1) {
+                              _currentTripStep++;
+                            } else {
+                              // Reset or complete
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Layanan selesai! Tugas tercatat dalam riwayat.',
+                                  ),
+                                ),
+                              );
+                              _currentTripStep = 0;
+                            }
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _currentTripStep == 3
+                              ? AppColors.success
+                              : AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        icon: Icon(
+                          _currentTripStep == 3
+                              ? Icons.check_circle_rounded
+                              : Icons.update_rounded,
+                          size: 16,
+                        ),
+                        label: Text(
+                          _getNextStepActionText(),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.chat_bubble_outline,
+                        color: AppColors.secondary,
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const ChatRoomPage(orderId: 'ORD-20261023-01'),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  String _getNextStepActionText() {
+    switch (_currentTripStep) {
+      case 0:
+        return 'Konfirmasi: Tiba di Penjemputan';
+      case 1:
+        return 'Konfirmasi: Menuju Faskes/RS';
+      case 2:
+        return 'Konfirmasi: Layanan Selesai';
+      case 3:
+      default:
+        return 'Tutup Tugas & Siap Tugas Baru';
+    }
+  }
+
+  Widget _buildRouteRow({required String pickup, required String destination}) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.trip_origin, size: 14, color: AppColors.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Jemput: $pickup',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            const Icon(Icons.location_on, size: 14, color: AppColors.secondary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Tujuan: $destination',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // 7. Daftar Tugas Terbaru
+  Widget _buildRecentTasksSection() {
+    final finishedTasks = [
+      {
+        'id': '#ORD-20261023-00',
+        'time': '07:15 WIB',
+        'route': 'Kotagede -> RSUD Wirosaban',
+        'status': 'Selesai',
+      },
+      {
+        'id': '#ORD-20261022-09',
+        'time': 'Kemarin 21:40',
+        'route': 'Condongcatur -> RS JIH',
+        'status': 'Selesai',
+      },
+      {
+        'id': '#ORD-20261022-06',
+        'time': 'Kemarin 16:20',
+        'route': 'Bantul -> RS PKU Bantul',
+        'status': 'Selesai',
+      },
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Daftar Tugas Terbaru Hari Ini',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...finishedTasks.map((t) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t['id']!,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      t['route']!,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    StatusBadge.success(t['status']!),
+                    const SizedBox(height: 2),
+                    Text(
+                      t['time']!,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildOtherTab(BuildContext context) {
+    final titles = [
+      'Beranda',
+      'Tugas Saya',
+      'Riwayat Tugas',
+      'Chat Komunikasi',
+      'Profil Sopir',
+    ];
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            titles[_currentNavIndex],
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          EmptyStateCard(
+            icon: Icons.assignment_outlined,
+            title: 'Menu ${titles[_currentNavIndex]}',
+            message:
+                'Daftar data ${titles[_currentNavIndex]} tersimpan di sistem.',
+            buttonText: 'Kembali ke Dashboard',
+            onButtonPressed: () {
+              setState(() => _currentNavIndex = 0);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
