@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/constants/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/domain/entities/user_entity.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/dashboard/presentation/pages/admin_dashboard_page.dart';
-import 'features/dashboard/presentation/pages/dokter_dashboard_page.dart';
-import 'features/dashboard/presentation/pages/kepala_dashboard_page.dart';
 import 'features/dashboard/presentation/pages/pengguna_dashboard_page.dart';
-import 'features/dashboard/presentation/pages/perawat_dashboard_page.dart';
 import 'features/dashboard/presentation/pages/sopir_dashboard_page.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID', null);
   runApp(const AmbulanceBookingApp());
 }
 
@@ -91,7 +90,7 @@ class _MainRoleSwitcherShellState extends State<MainRoleSwitcherShell> {
                   ),
                   const SizedBox(width: 12),
 
-                  // Simulation Selector for 6 Actors
+                  // Simulation Selector for 3 Actors
                   Expanded(
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
@@ -170,12 +169,6 @@ class _MainRoleSwitcherShellState extends State<MainRoleSwitcherShell> {
         return const SopirDashboardPage();
       case UserRole.admin:
         return const AdminDashboardPage();
-      case UserRole.kepala:
-        return const KepalaDashboardPage();
-      case UserRole.perawat:
-        return const PerawatDashboardPage();
-      case UserRole.dokter:
-        return const DokterDashboardPage();
     }
   }
 }

@@ -34,7 +34,7 @@ class LoginPage extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            // Daftar 6 Peran Aktor
+            // Daftar 3 Peran Aktor (Pengguna, Sopir Ambulans, Administrator)
             Wrap(
               spacing: 8,
               runSpacing: 8,

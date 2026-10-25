@@ -12,7 +12,7 @@ class DateFormatter {
   }
 
   static String formatTime(DateTime dateTime) {
-    return DateFormat('HH:mm', 'id_ID').format(dateTime);
+    return DateFormat('HH:mm').format(dateTime);
   }
 
   static String formatCurrency(double amount) {

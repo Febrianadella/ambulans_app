@@ -23,9 +23,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     {'title': 'Penugasan', 'icon': Icons.assignment_ind_outlined},
     {'title': 'Data Ambulans', 'icon': Icons.airport_shuttle_outlined},
     {'title': 'Data Sopir', 'icon': Icons.badge_outlined},
-    {'title': 'Data Dokter', 'icon': Icons.medical_services_outlined},
-    {'title': 'Data Perawat', 'icon': Icons.health_and_safety_outlined},
     {'title': 'Tarif', 'icon': Icons.price_change_outlined},
+    {'title': 'Pemantauan Operasional', 'icon': Icons.track_changes_outlined},
+    {'title': 'Riwayat Layanan', 'icon': Icons.history_edu_outlined},
     {'title': 'Kritik dan Saran', 'icon': Icons.feedback_outlined},
     {'title': 'Analisis LLM', 'icon': Icons.auto_awesome_outlined},
     {'title': 'Laporan', 'icon': Icons.analytics_outlined},
@@ -847,6 +847,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   Widget _buildMenuPlaceholder(BuildContext context) {
+    String detailInfo =
+        'Menu ini telah siap dihubungkan dengan API endpoint backend dan manajemen database.';
+    if (_selectedSidebarMenu == 'Pemantauan Operasional') {
+      detailInfo =
+          'Pantau pergerakan armada ambulans aktif, waktu tanggap penjemputan (ETA), dan koordinasi darurat di lapangan secara real-time.';
+    } else if (_selectedSidebarMenu == 'Riwayat Layanan') {
+      detailInfo =
+          'Arsip seluruh riwayat penjemputan, pesanan selesai, dan log perjalanan ambulans untuk kebutuhan audit.';
+    } else if (_selectedSidebarMenu == 'Laporan') {
+      detailInfo =
+          'Rekapitulasi berkala performa operasional, utilisasi armada, dan laporan tingkat kepuasan layanan ambulans.';
+    } else if (_selectedSidebarMenu == 'Kritik dan Saran') {
+      detailInfo =
+          'Daftar masukan serta ulasan dari pengguna untuk evaluasi peningkatan mutu layanan ambulans.';
+    }
+
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -875,21 +891,41 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  'Menu ini telah siap dihubungkan dengan API endpoint backend dan manajemen database.',
-                  style: TextStyle(
+                Text(
+                  detailInfo,
+                  style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 13,
                   ),
                 ),
                 const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _selectedSidebarMenu = 'Beranda';
-                    });
-                  },
-                  child: const Text('Kembali ke Ringkasan Beranda'),
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _selectedSidebarMenu = 'Beranda';
+                        });
+                      },
+                      child: const Text('Kembali ke Ringkasan Beranda'),
+                    ),
+                    if (_selectedSidebarMenu == 'Kritik dan Saran' ||
+                        _selectedSidebarMenu == 'Laporan') ...[
+                      const SizedBox(width: 12),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LlmAnalysisDetailPage(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.auto_awesome, size: 16),
+                        label: const Text('Buka Analisis LLM'),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
