@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/status_badge.dart';
+import '../../../chat/presentation/pages/chat_room_page.dart';
 
 class LiveTrackingPage extends StatelessWidget {
   final String orderId;
@@ -10,26 +12,69 @@ class LiveTrackingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Pelacakan Ambulans #$orderId')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text('Pelacakan Ambulans #$orderId'),
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.textPrimary,
+        elevation: 0.5,
+      ),
       body: Stack(
         children: [
-          // Placeholder container untuk Map (Google Maps / OpenStreetMap)
+          // Visual Container Rute Navigasi Terpadu
           Container(
-            color: Colors.blueGrey.shade100,
-            child: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.map_outlined, size: 72, color: Colors.blueGrey),
-                  SizedBox(height: 8),
-                  Text(
-                    'Peta Pelacakan Posisi GPS Ambulans Real-Time',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.blueGrey,
+            color: const Color(0xFFEFF3F8),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.navigation_rounded,
+                        size: 56,
+                        color: AppColors.primary,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Rute Navigasi Darurat Aktif',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Menghubungkan Jl. Malioboro menuju RSUP Dr. Sardjito\nEstimasi jarak tempuh 3.2 km via jalur prioritas medis.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    StatusBadge.info(
+                      'Sopir Menuju Lokasi Penjemputan',
+                      icon: Icons.directions_car_rounded,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -51,9 +96,11 @@ class LiveTrackingPage extends StatelessWidget {
                       children: [
                         const CircleAvatar(
                           backgroundColor: AppColors.primaryLight,
+                          radius: 22,
                           child: Icon(
                             Icons.airport_shuttle,
                             color: AppColors.primary,
+                            size: 24,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -62,24 +109,37 @@ class LiveTrackingPage extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Ambulans Darurat #B-119-MED',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                'Joko Susilo • AB 1199 MED',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                               ),
+                              SizedBox(height: 2),
                               Text(
-                                'Estimasi Tiba: 8 Menit (3.2 km)',
+                                'Ambulans Darurat (Est. 8 Menit • 3.2 km)',
                                 style: TextStyle(
                                   color: AppColors.textSecondary,
-                                  fontSize: 13,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
                           ),
                         ),
                         IconButton(
-                          onPressed: () {},
+                          tooltip: 'Chat Sopir',
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ChatRoomPage(
+                                  orderId: orderId,
+                                  driverName: 'Joko Susilo',
+                                  driverPlate: 'AB 1199 MED',
+                                ),
+                              ),
+                            );
+                          },
                           icon: const Icon(
-                            Icons.phone,
-                            color: AppColors.success,
+                            Icons.chat_bubble_outline_rounded,
+                            color: AppColors.primary,
                           ),
                         ),
                       ],

@@ -9,6 +9,7 @@ class PaymentModel extends PaymentEntity {
     super.amount,
     super.paymentMethod,
     super.paymentDate,
+    super.rejectionReason,
   });
 
   /// Factory constructor to create a [PaymentModel] from a JSON map.
@@ -31,6 +32,9 @@ class PaymentModel extends PaymentEntity {
           : (json['payment_date'] != null
                 ? DateTime.tryParse(json['payment_date'] as String)
                 : null),
+      rejectionReason:
+          json['rejectionReason'] as String? ??
+          json['rejection_reason'] as String?,
     );
   }
 
@@ -44,6 +48,7 @@ class PaymentModel extends PaymentEntity {
       'amount': amount,
       'paymentMethod': paymentMethod,
       'paymentDate': paymentDate?.toIso8601String(),
+      'rejectionReason': rejectionReason,
     };
   }
 
@@ -56,6 +61,7 @@ class PaymentModel extends PaymentEntity {
     double? amount,
     String? paymentMethod,
     DateTime? paymentDate,
+    String? rejectionReason,
   }) {
     return PaymentModel(
       id: id ?? this.id,
@@ -65,6 +71,7 @@ class PaymentModel extends PaymentEntity {
       amount: amount ?? this.amount,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       paymentDate: paymentDate ?? this.paymentDate,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
     );
   }
 

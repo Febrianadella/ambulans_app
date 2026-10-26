@@ -24,6 +24,10 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
         destinationAddress: event.destinationAddress,
         pickupLatitude: event.pickupLatitude,
         pickupLongitude: event.pickupLongitude,
+        patientName: event.patientName,
+        patientGender: event.patientGender,
+        patientAge: event.patientAge,
+        patientPhoneNumber: event.patientPhoneNumber,
         notes: event.notes,
       );
       emit(BookingCreatedSuccess(order));

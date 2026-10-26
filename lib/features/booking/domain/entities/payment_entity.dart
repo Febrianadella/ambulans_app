@@ -6,6 +6,7 @@ class PaymentEntity {
   final double? amount;
   final String? paymentMethod;
   final DateTime? paymentDate;
+  final String? rejectionReason;
 
   const PaymentEntity({
     required this.id,
@@ -15,5 +16,6 @@ class PaymentEntity {
     this.amount,
     this.paymentMethod,
     this.paymentDate,
+    this.rejectionReason,
   });
 }

@@ -15,6 +15,17 @@ class OrderModel extends OrderEntity {
     super.destinationLongitude,
     super.totalPrice,
     super.createdAt,
+    super.patientName,
+    super.patientGender,
+    super.patientAge,
+    super.patientPhoneNumber,
+    super.notes,
+    super.serviceType,
+    super.basePrice,
+    super.additionalFee,
+    super.rejectionReason,
+    super.paymentMethod,
+    super.paymentProofUrl,
   });
 
   /// Factory constructor to create an [OrderModel] from a JSON map.
@@ -54,6 +65,32 @@ class OrderModel extends OrderEntity {
           : (json['created_at'] != null
                 ? DateTime.tryParse(json['created_at'] as String)
                 : null),
+      patientName:
+          json['patientName'] as String? ?? json['patient_name'] as String?,
+      patientGender:
+          json['patientGender'] as String? ?? json['patient_gender'] as String?,
+      patientAge: (json['patientAge'] ?? json['patient_age'] as num?)?.toInt(),
+      patientPhoneNumber:
+          json['patientPhoneNumber'] as String? ??
+          json['patient_phone_number'] as String? ??
+          json['patientPhone'] as String?,
+      notes:
+          json['notes'] as String? ??
+          json['patientCondition'] as String? ??
+          json['patient_condition'] as String?,
+      serviceType:
+          json['serviceType'] as String? ?? json['service_type'] as String?,
+      basePrice: (json['basePrice'] ?? json['base_price'] as num?)?.toDouble(),
+      additionalFee:
+          (json['additionalFee'] ?? json['additional_fee'] as num?)?.toDouble(),
+      rejectionReason:
+          json['rejectionReason'] as String? ??
+          json['rejection_reason'] as String?,
+      paymentMethod:
+          json['paymentMethod'] as String? ?? json['payment_method'] as String?,
+      paymentProofUrl:
+          json['paymentProofUrl'] as String? ??
+          json['payment_proof_url'] as String?,
     );
   }
 
@@ -73,10 +110,22 @@ class OrderModel extends OrderEntity {
       'destinationLongitude': destinationLongitude,
       'totalPrice': totalPrice,
       'createdAt': createdAt?.toIso8601String(),
+      'patientName': patientName,
+      'patientGender': patientGender,
+      'patientAge': patientAge,
+      'patientPhoneNumber': patientPhoneNumber,
+      'notes': notes,
+      'serviceType': serviceType,
+      'basePrice': basePrice,
+      'additionalFee': additionalFee,
+      'rejectionReason': rejectionReason,
+      'paymentMethod': paymentMethod,
+      'paymentProofUrl': paymentProofUrl,
     };
   }
 
   /// Creates a copy of this [OrderModel] with updated fields.
+  @override
   OrderModel copyWith({
     String? id,
     String? userId,
@@ -91,6 +140,17 @@ class OrderModel extends OrderEntity {
     double? destinationLongitude,
     double? totalPrice,
     DateTime? createdAt,
+    String? patientName,
+    String? patientGender,
+    int? patientAge,
+    String? patientPhoneNumber,
+    String? notes,
+    String? serviceType,
+    double? basePrice,
+    double? additionalFee,
+    String? rejectionReason,
+    String? paymentMethod,
+    String? paymentProofUrl,
   }) {
     return OrderModel(
       id: id ?? this.id,
@@ -106,11 +166,22 @@ class OrderModel extends OrderEntity {
       destinationLongitude: destinationLongitude ?? this.destinationLongitude,
       totalPrice: totalPrice ?? this.totalPrice,
       createdAt: createdAt ?? this.createdAt,
+      patientName: patientName ?? this.patientName,
+      patientGender: patientGender ?? this.patientGender,
+      patientAge: patientAge ?? this.patientAge,
+      patientPhoneNumber: patientPhoneNumber ?? this.patientPhoneNumber,
+      notes: notes ?? this.notes,
+      serviceType: serviceType ?? this.serviceType,
+      basePrice: basePrice ?? this.basePrice,
+      additionalFee: additionalFee ?? this.additionalFee,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      paymentProofUrl: paymentProofUrl ?? this.paymentProofUrl,
     );
   }
 
   @override
   String toString() {
-    return 'OrderModel(id: $id, userId: $userId, ambulanceId: $ambulanceId, driverId: $driverId, status: ${status.value})';
+    return 'OrderModel(id: $id, userId: $userId, ambulanceId: $ambulanceId, driverId: $driverId, status: ${status.value}, patientName: $patientName)';
   }
 }

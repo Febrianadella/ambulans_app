@@ -82,6 +82,37 @@ void main() {
       );
     });
 
+    test('OrderModel with patient identity data serialization and deserialization', () {
+      final jsonMap = {
+        'id': 'ORD-1002',
+        'userId': 'USR-123',
+        'ambulanceId': 'AMB-01',
+        'driverId': 'DVR-05',
+        'status': 'menungguPembayaran',
+        'pickupAddress': 'Jl. Kaliurang KM 5',
+        'destinationAddress': 'RSUP Dr. Sardjito',
+        'patientName': 'Budi Santoso',
+        'patientGender': 'Laki-laki',
+        'patientAge': 45,
+        'patientPhoneNumber': '081234567890',
+        'notes': 'Sesak napas dan nyeri dada sebelah kiri',
+      };
+
+      final order = OrderModel.fromJson(jsonMap);
+      expect(order.patientName, 'Budi Santoso');
+      expect(order.patientGender, 'Laki-laki');
+      expect(order.patientAge, 45);
+      expect(order.patientPhoneNumber, '081234567890');
+      expect(order.notes, 'Sesak napas dan nyeri dada sebelah kiri');
+
+      final serialized = order.toJson();
+      expect(serialized['patientName'], 'Budi Santoso');
+      expect(serialized['patientGender'], 'Laki-laki');
+      expect(serialized['patientAge'], 45);
+      expect(serialized['patientPhoneNumber'], '081234567890');
+      expect(serialized['notes'], 'Sesak napas dan nyeri dada sebelah kiri');
+    });
+
     test('PaymentModel serialization and deserialization', () {
       final jsonMap = {
         'id': 'PAY-777',

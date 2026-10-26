@@ -4,11 +4,19 @@ class DateFormatter {
   DateFormatter._();
 
   static String formatFull(DateTime dateTime) {
-    return DateFormat('dd MMMM yyyy, HH:mm', 'id_ID').format(dateTime);
+    try {
+      return DateFormat('dd MMMM yyyy, HH:mm', 'id_ID').format(dateTime);
+    } catch (_) {
+      return DateFormat('dd MMMM yyyy, HH:mm').format(dateTime);
+    }
   }
 
   static String formatDate(DateTime dateTime) {
-    return DateFormat('dd MMM yyyy', 'id_ID').format(dateTime);
+    try {
+      return DateFormat('dd MMM yyyy', 'id_ID').format(dateTime);
+    } catch (_) {
+      return DateFormat('dd MMM yyyy').format(dateTime);
+    }
   }
 
   static String formatTime(DateTime dateTime) {
