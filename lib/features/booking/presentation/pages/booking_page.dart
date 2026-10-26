@@ -38,9 +38,7 @@ class _BookingPageState extends State<BookingPage> {
     super.initState();
     _repository =
         widget.bookingRepository ??
-        BookingRepositoryImpl(
-          remoteDataSource: BookingRemoteDataSourceImpl(),
-        );
+        BookingRepositoryImpl(remoteDataSource: BookingRemoteDataSourceImpl());
 
     _pickupController = TextEditingController(
       text: 'Jl. Malioboro No. 12, Sosromenduran, Kota Yogyakarta',
@@ -194,11 +192,13 @@ class _BookingPageState extends State<BookingPage> {
                 minLines: 3,
                 textInputAction: TextInputAction.done,
                 decoration: _buildInputDecoration(
-                  hintText:
-                      'Tuliskan kondisi pasien, keluhan, atau informasi penting lainnya...',
+                  hintText: 'Tuliskan kondisi pasien, keluhan, atau informasi penting lainnya...',
                   prefixIcon: const Padding(
                     padding: EdgeInsets.only(bottom: 40.0),
-                    child: Icon(Icons.edit_note_rounded, color: AppColors.primary),
+                    child: Icon(
+                      Icons.edit_note_rounded,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
               ),
@@ -209,17 +209,16 @@ class _BookingPageState extends State<BookingPage> {
                 height: 52,
                 child: ElevatedButton.icon(
                   onPressed: _isSubmitting ? null : _submitBooking,
-                  icon:
-                      _isSubmitting
-                          ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
-                          )
-                          : const Icon(Icons.emergency_rounded, size: 22),
+                  icon: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.emergency_rounded, size: 22),
                   label: Text(
                     _isSubmitting
                         ? 'Memproses Pesanan...'
@@ -453,20 +452,19 @@ class _BookingPageState extends State<BookingPage> {
             Icons.keyboard_arrow_down_rounded,
             color: AppColors.textSecondary,
           ),
-          items:
-              _genderOptions.map((gender) {
-                return DropdownMenuItem<String>(
-                  value: gender,
-                  child: Text(
-                    gender,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textPrimary,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                );
-              }).toList(),
+          items: _genderOptions.map((gender) {
+            return DropdownMenuItem<String>(
+              value: gender,
+              child: Text(
+                gender,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textPrimary,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            );
+          }).toList(),
           onChanged: (value) {
             setState(() {
               _selectedGender = value;

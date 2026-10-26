@@ -14,18 +14,15 @@ class PaymentPage extends StatefulWidget {
   final OrderEntity order;
   final BookingRepository repository;
 
-  const PaymentPage({
-    super.key,
-    required this.order,
-    required this.repository,
-  });
+  const PaymentPage({super.key, required this.order, required this.repository});
 
   @override
   State<PaymentPage> createState() => _PaymentPageState();
 }
 
 class _PaymentPageState extends State<PaymentPage> {
-  String? _selectedMethod; // 'Transfer Bank BCA', 'Transfer Bank Mandiri', 'QRIS'
+  String?
+  _selectedMethod; // 'Transfer Bank BCA', 'Transfer Bank Mandiri', 'QRIS'
   String? _proofFileName;
   String? _proofFilePath;
   int? _proofFileSizeBytes; // max 4MB = 4 * 1024 * 1024 bytes
@@ -85,7 +82,10 @@ class _PaymentPageState extends State<PaymentPage> {
                   color: AppColors.primaryLight,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.receipt_rounded, color: AppColors.primary),
+                child: const Icon(
+                  Icons.receipt_rounded,
+                  color: AppColors.primary,
+                ),
               ),
               title: const Text('Bukti Struk Transfer Bank (Valid)'),
               subtitle: const Text('File: bukti_transfer_bank.jpg (1.4 MB)'),
@@ -133,12 +133,16 @@ class _PaymentPageState extends State<PaymentPage> {
     // Validasi Ekstensi File
     final lower = name.toLowerCase();
     final isValidExtension =
-        lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.png');
+        lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png');
 
     if (!isValidExtension) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Format file tidak didukung. Harap pilih file JPG, JPEG, atau PNG.'),
+          content: Text(
+            'Format file tidak didukung. Harap pilih file JPG, JPEG, atau PNG.',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -183,7 +187,9 @@ class _PaymentPageState extends State<PaymentPage> {
     if (_selectedMethod == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Silakan pilih salah satu metode pembayaran terlebih dahulu.'),
+          content: Text(
+            'Silakan pilih salah satu metode pembayaran terlebih dahulu.',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -193,7 +199,9 @@ class _PaymentPageState extends State<PaymentPage> {
     if (_proofFileName == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Silakan unggah bukti pembayaran yang valid sebelum mengirim.'),
+          content: Text(
+            'Silakan unggah bukti pembayaran yang valid sebelum mengirim.',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -256,7 +264,8 @@ class _PaymentPageState extends State<PaymentPage> {
     final basePrice = widget.order.basePrice ?? 150000.0;
     final additionalFee = widget.order.additionalFee ?? 50000.0;
 
-    final canSubmit = _selectedMethod != null && _proofFileName != null && !_isSubmitting;
+    final canSubmit =
+        _selectedMethod != null && _proofFileName != null && !_isSubmitting;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -318,7 +327,10 @@ class _PaymentPageState extends State<PaymentPage> {
                           SizedBox(width: 12),
                           Text(
                             'Mengirim Bukti...',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       )
@@ -329,7 +341,10 @@ class _PaymentPageState extends State<PaymentPage> {
                           SizedBox(width: 8),
                           Text(
                             'Kirim Bukti Pembayaran',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -402,9 +417,15 @@ class _PaymentPageState extends State<PaymentPage> {
           const SizedBox(height: 12),
           const Divider(height: 1, color: AppColors.divider),
           const SizedBox(height: 14),
-          _buildBillRow('Tarif Dasar Ambulans', DateFormatter.formatCurrency(basePrice)),
+          _buildBillRow(
+            'Tarif Dasar Ambulans',
+            DateFormatter.formatCurrency(basePrice),
+          ),
           const SizedBox(height: 6),
-          _buildBillRow('Peralatan Medis & O2', DateFormatter.formatCurrency(additionalFee)),
+          _buildBillRow(
+            'Peralatan Medis & O2',
+            DateFormatter.formatCurrency(additionalFee),
+          ),
           const Divider(height: 20, color: AppColors.border),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -524,7 +545,9 @@ class _PaymentPageState extends State<PaymentPage> {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryLight.withValues(alpha: 0.35) : AppColors.background,
+          color: isSelected
+              ? AppColors.primaryLight.withValues(alpha: 0.35)
+              : AppColors.background,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? AppColors.primary : AppColors.border,
@@ -554,7 +577,9 @@ class _PaymentPageState extends State<PaymentPage> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? AppColors.primaryDark : AppColors.textPrimary,
+                      color: isSelected
+                          ? AppColors.primaryDark
+                          : AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -577,7 +602,10 @@ class _PaymentPageState extends State<PaymentPage> {
                 backgroundColor: Colors.white,
                 foregroundColor: AppColors.primary,
                 side: const BorderSide(color: AppColors.border),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 visualDensity: VisualDensity.compact,
                 elevation: 0,
               ),
@@ -601,7 +629,9 @@ class _PaymentPageState extends State<PaymentPage> {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryLight.withValues(alpha: 0.35) : AppColors.background,
+          color: isSelected
+              ? AppColors.primaryLight.withValues(alpha: 0.35)
+              : AppColors.background,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? AppColors.primary : AppColors.border,
@@ -632,13 +662,18 @@ class _PaymentPageState extends State<PaymentPage> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: isSelected ? AppColors.primaryDark : AppColors.textPrimary,
+                          color: isSelected
+                              ? AppColors.primaryDark
+                              : AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
                       const Text(
                         'BCA, Mandiri, BRI, BNI, GoPay, OVO, ShopeePay, DANA',
-                        style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -659,11 +694,18 @@ class _PaymentPageState extends State<PaymentPage> {
                     const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.qr_code_2_rounded, color: AppColors.primary, size: 28),
+                        Icon(
+                          Icons.qr_code_2_rounded,
+                          color: AppColors.primary,
+                          size: 28,
+                        ),
                         SizedBox(width: 8),
                         Text(
                           'QRIS Standar Pembayaran Nasional',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -687,7 +729,10 @@ class _PaymentPageState extends State<PaymentPage> {
                     const SizedBox(height: 8),
                     const Text(
                       'NMID: ID1020304050607 • AmbulanceCare',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Text(
                       'Total: ${DateFormatter.formatCurrency(amount)}',
@@ -723,7 +768,11 @@ class _PaymentPageState extends State<PaymentPage> {
         children: [
           const Row(
             children: [
-              Icon(Icons.cloud_upload_outlined, color: AppColors.primary, size: 20),
+              Icon(
+                Icons.cloud_upload_outlined,
+                color: AppColors.primary,
+                size: 20,
+              ),
               SizedBox(width: 8),
               Text(
                 'Unggah Bukti Pembayaran',
@@ -748,7 +797,10 @@ class _PaymentPageState extends State<PaymentPage> {
               borderRadius: BorderRadius.circular(12),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 24,
+                  horizontal: 16,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.background,
                   borderRadius: BorderRadius.circular(12),
@@ -784,7 +836,10 @@ class _PaymentPageState extends State<PaymentPage> {
                     const SizedBox(height: 4),
                     const Text(
                       'Ketuk untuk memilih file struk pembayaran',
-                      style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -797,7 +852,9 @@ class _PaymentPageState extends State<PaymentPage> {
               decoration: BoxDecoration(
                 color: AppColors.background,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.success.withValues(alpha: 0.5)),
+                border: Border.all(
+                  color: AppColors.success.withValues(alpha: 0.5),
+                ),
               ),
               child: Column(
                 children: [
@@ -867,7 +924,10 @@ class _PaymentPageState extends State<PaymentPage> {
                       const SizedBox(width: 8),
                       TextButton.icon(
                         onPressed: _removeProofFile,
-                        icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                        icon: const Icon(
+                          Icons.delete_outline_rounded,
+                          size: 16,
+                        ),
                         label: const Text('Hapus'),
                         style: TextButton.styleFrom(
                           foregroundColor: AppColors.error,

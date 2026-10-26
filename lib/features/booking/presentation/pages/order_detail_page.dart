@@ -10,16 +10,17 @@ import '../../data/repositories/booking_repository_impl.dart';
 import '../../domain/entities/order_entity.dart';
 import '../../domain/entities/payment_entity.dart';
 import '../../domain/repositories/booking_repository.dart';
+import '../../../tracking/presentation/widgets/driver_info_card.dart';
+import '../../../tracking/presentation/widgets/live_tracking_map_view.dart';
+import '../../../tracking/presentation/widgets/route_location_card.dart';
+import '../../../tracking/presentation/widgets/trip_info_card.dart';
+import '../../../tracking/presentation/widgets/trip_progress_stepper.dart';
 
 class OrderDetailPage extends StatefulWidget {
   final String orderId;
   final BookingRepository? repository;
 
-  const OrderDetailPage({
-    super.key,
-    required this.orderId,
-    this.repository,
-  });
+  const OrderDetailPage({super.key, required this.orderId, this.repository});
 
   @override
   State<OrderDetailPage> createState() => _OrderDetailPageState();
@@ -34,18 +35,21 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ??
-        BookingRepositoryImpl(
-          remoteDataSource: BookingRemoteDataSourceImpl(),
-        );
+    _repository =
+        widget.repository ??
+        BookingRepositoryImpl(remoteDataSource: BookingRemoteDataSourceImpl());
 
-    BookingRemoteDataSourceImpl.ordersChangeNotifier.addListener(_onOrderUpdate);
+    BookingRemoteDataSourceImpl.ordersChangeNotifier.addListener(
+      _onOrderUpdate,
+    );
     _loadOrderData();
   }
 
   @override
   void dispose() {
-    BookingRemoteDataSourceImpl.ordersChangeNotifier.removeListener(_onOrderUpdate);
+    BookingRemoteDataSourceImpl.ordersChangeNotifier.removeListener(
+      _onOrderUpdate,
+    );
     super.dispose();
   }
 
@@ -73,8 +77,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
   bool get _isDriverAssigned {
     if (_order == null) return false;
-    final paymentStatus = OrderStatusHelper.getPaymentStatusText(_order!, _payment);
-    if (paymentStatus == 'Menunggu Pembayaran' || paymentStatus == 'Menunggu Validasi') {
+    final paymentStatus = OrderStatusHelper.getPaymentStatusText(
+      _order!,
+      _payment,
+    );
+    if (paymentStatus == 'Menunggu Pembayaran' ||
+        paymentStatus == 'Menunggu Validasi') {
       return false;
     }
     return _order!.driverId.isNotEmpty && _order!.driverId != 'DVR-NONE';
@@ -128,70 +136,91 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               child: CircularProgressIndicator(color: AppColors.primary),
             )
           : _order == null
-              ? Center(
-                  child: EmptyStateCard(
-                    icon: Icons.error_outline_rounded,
-                    title: 'Pesanan Tidak Ditemukan',
-                    message:
-                        'Data pesanan #${widget.orderId} tidak tersedia di sistem.',
-                    buttonText: 'Kembali',
-                    onButtonPressed: () => Navigator.of(context).pop(),
-                  ),
-                )
-              : LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isDesktop = constraints.maxWidth >= 850;
-                    return RefreshIndicator(
-                      color: AppColors.primary,
-                      onRefresh: _loadOrderData,
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isDesktop ? 32 : 16,
-                          vertical: 18,
-                        ),
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 1100),
-                            child: isDesktop
-                                ? _buildDesktopLayout()
-                                : _buildMobileLayout(),
-                          ),
-                        ),
+          ? Center(
+              child: EmptyStateCard(
+                icon: Icons.error_outline_rounded,
+                title: 'Pesanan Tidak Ditemukan',
+                message:
+                    'Data pesanan #${widget.orderId} tidak tersedia di sistem.',
+                buttonText: 'Kembali',
+                onButtonPressed: () => Navigator.of(context).pop(),
+              ),
+            )
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final isDesktop = constraints.maxWidth >= 850;
+                return RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: _loadOrderData,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isDesktop ? 32 : 14,
+                      vertical: isDesktop ? 18 : 10,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1100),
+                        child: isDesktop
+                            ? _buildDesktopLayout()
+                            : _buildMobileLayout(),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 
   // Layout Desktop 2 Kolom
   Widget _buildDesktopLayout() {
+    final order = _order!;
+    final paymentText = OrderStatusHelper.getPaymentStatusText(order, _payment);
+    final isPaymentValid = paymentText == 'Pembayaran Valid';
+    final currentStep = _getTripStepIndex(order.status, isPaymentValid);
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Kolom Kiri: Tracking Ambulans & Kartu Sopir (hanya jika sopir tersedia)
+        // Kolom Kiri: Tracking Ambulans, Info Perjalanan, & Stepper
         Expanded(
           flex: 6,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildTrackingCard(),
-              if (_isDriverAssigned) ...[
-                const SizedBox(height: 16),
-                _buildDriverCard(),
-              ],
+              _buildTrackingCard(isDesktop: true),
+              const SizedBox(height: 16),
+              TripInfoCard(
+                status: order.status,
+                isPaymentValid: isPaymentValid,
+              ),
+              const SizedBox(height: 16),
+              TripProgressStepper(currentStep: currentStep),
             ],
           ),
         ),
         const SizedBox(width: 20),
-        // Kolom Kanan: Header Detail & Rincian Pesanan
+        // Kolom Kanan: Header Detail, Kartu Sopir, Kartu Rute, & Rincian Pesanan
         Expanded(
           flex: 5,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildHeaderDetailCard(),
+              if (_isDriverAssigned) ...[
+                const SizedBox(height: 16),
+                _buildDriverCard(),
+              ],
+              const SizedBox(height: 16),
+              RouteLocationCard(
+                pickupAddress:
+                    order.pickupAddress ??
+                    'Lokasi penjemputan belum ditentukan',
+                destinationAddress:
+                    order.destinationAddress ??
+                    'Rumah sakit rujukan belum ditentukan',
+              ),
               const SizedBox(height: 16),
               _buildOrderInfoCard(),
             ],
@@ -203,26 +232,49 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
   // Layout Mobile 1 Kolom Vertikal
   Widget _buildMobileLayout() {
+    final order = _order!;
+    final paymentText = OrderStatusHelper.getPaymentStatusText(order, _payment);
+    final isPaymentValid = paymentText == 'Pembayaran Valid';
+    final currentStep = _getTripStepIndex(order.status, isPaymentValid);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // 1. Header Detail (Nomor Pesanan & Badge Status)
         _buildHeaderDetailCard(),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
 
-        // 2. Tracking Ambulans / Rute Perjalanan
+        // 2. Kartu Utama Live Tracking Ambulans dengan Area Peta
         _buildTrackingCard(),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
 
-        // 3. Card Informasi Ambulans dan Sopir (hanya jika sopir tersedia)
+        // 3. Kartu Informasi Sopir dan Armada (Hanya tampil jika sopir ditugaskan)
         if (_isDriverAssigned) ...[
           _buildDriverCard(),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
         ],
 
-        // 4. Informasi Pesanan Lengkap (Tanpa Jadwal Layanan)
+        // 4. Kartu Informasi Perjalanan (Estimasi Kedatangan, Jarak, Status, Catatan Simulasi)
+        TripInfoCard(status: order.status, isPaymentValid: isPaymentValid),
+        const SizedBox(height: 10),
+
+        // 5. Kartu Rute Perjalanan (Lokasi Penjemputan -> RS Tujuan)
+        RouteLocationCard(
+          pickupAddress:
+              order.pickupAddress ?? 'Lokasi penjemputan belum ditentukan',
+          destinationAddress:
+              order.destinationAddress ??
+              'Rumah sakit rujukan belum ditentukan',
+        ),
+        const SizedBox(height: 10),
+
+        // 6. Tahapan Perjalanan Ambulans (Stepper 5 Tahap)
+        TripProgressStepper(currentStep: currentStep),
+        const SizedBox(height: 10),
+
+        // 7. Informasi Pesanan Lengkap & Total Biaya
         _buildOrderInfoCard(),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
       ],
     );
   }
@@ -234,7 +286,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     final paymentBadge = OrderStatusHelper.getPaymentBadge(order, _payment);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -306,7 +358,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               ),
             ],
           ),
-          const Divider(height: 20, color: AppColors.border),
+          const Divider(height: 14, color: AppColors.border),
           const Text(
             'Status Terkini:',
             style: TextStyle(
@@ -319,10 +371,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: [
-              serviceBadge,
-              paymentBadge,
-            ],
+            children: [serviceBadge, paymentBadge],
           ),
         ],
       ),
@@ -332,8 +381,14 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   // B. Card Informasi Pesanan (Nomor, Tanggal/Waktu, Total, Status, Lokasi Jemput, Lokasi Tujuan RS)
   Widget _buildOrderInfoCard() {
     final order = _order!;
-    final serviceStatusText = OrderStatusHelper.getServiceStatusText(order, _payment);
-    final paymentStatusText = OrderStatusHelper.getPaymentStatusText(order, _payment);
+    final serviceStatusText = OrderStatusHelper.getServiceStatusText(
+      order,
+      _payment,
+    );
+    final paymentStatusText = OrderStatusHelper.getPaymentStatusText(
+      order,
+      _payment,
+    );
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -354,7 +409,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         children: [
           const Row(
             children: [
-              Icon(Icons.info_outline_rounded, size: 18, color: AppColors.primary),
+              Icon(
+                Icons.info_outline_rounded,
+                size: 18,
+                color: AppColors.primary,
+              ),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -385,9 +444,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             _buildInfoRow('Metode Pembayaran', order.paymentMethod!),
           const Divider(height: 16, color: AppColors.border),
           _buildLocationSection(
-            pickup: order.pickupAddress ?? 'Lokasi penjemputan belum ditentukan',
+            pickup:
+                order.pickupAddress ?? 'Lokasi penjemputan belum ditentukan',
             destination:
-                order.destinationAddress ?? 'Rumah sakit rujukan belum ditentukan',
+                order.destinationAddress ??
+                'Rumah sakit rujukan belum ditentukan',
           ),
           const Divider(height: 20, color: AppColors.border),
           Row(
@@ -405,7 +466,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               ),
               const SizedBox(width: 8),
               Text(
-                DateFormatter.formatCurrency((order.totalPrice ?? 250000).toDouble()),
+                DateFormatter.formatCurrency(
+                  (order.totalPrice ?? 250000).toDouble(),
+                ),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -535,179 +598,229 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     );
   }
 
-  // C. Bagian Tracking Perjalanan Ambulans (BEBAS KATA PLACEHOLDER)
-  Widget _buildTrackingCard() {
+  // C. Bagian Live Tracking Ambulans
+  Widget _buildTrackingCard({bool isDesktop = false}) {
     final order = _order!;
     final serviceText = OrderStatusHelper.getServiceStatusText(order, _payment);
     final paymentText = OrderStatusHelper.getPaymentStatusText(order, _payment);
     final isPaymentValid = paymentText == 'Pembayaran Valid';
 
-    // Tahapan status perjalanan yang realistis
-    final currentStep = _getTripStepIndex(order.status, isPaymentValid);
+    // Status badge teks
+    String statusBadge;
+    if (!isPaymentValid) {
+      statusBadge = 'Menunggu Validasi';
+    } else {
+      switch (order.status) {
+        case OrderStatus.menujuLokasi:
+          statusBadge = 'Ambulans Menuju Lokasi';
+          break;
+        case OrderStatus.tibaDiLokasi:
+          statusBadge = 'Tiba di Penjemputan';
+          break;
+        case OrderStatus.dalamPerjalanan:
+          statusBadge = 'Menuju Rumah Sakit';
+          break;
+        case OrderStatus.layananSelesai:
+          statusBadge = 'Layanan Selesai';
+          break;
+        default:
+          statusBadge = serviceText;
+      }
+    }
 
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Expanded(
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.alt_route_rounded,
-                      size: 18,
-                      color: AppColors.primary,
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Tracking Ambulans',
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isPaymentValid
-                      ? AppColors.successLight
-                      : AppColors.warningLight,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      isPaymentValid
-                          ? Icons.check_circle_rounded
-                          : Icons.access_time_filled_rounded,
-                      size: 12,
-                      color: isPaymentValid
-                          ? AppColors.success
-                          : AppColors.warning,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      isPaymentValid ? 'Sopir Aktif' : 'Menunggu Validasi',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: isPaymentValid
-                            ? AppColors.success
-                            : AppColors.warning,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Banner Status Aktual Perjalanan
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: currentStep == 4
-                  ? AppColors.successLight
-                  : (isPaymentValid
-                      ? AppColors.primaryLight
-                      : AppColors.warningLight),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: currentStep == 4
-                    ? AppColors.success.withValues(alpha: 0.3)
-                    : (isPaymentValid
-                        ? AppColors.primary.withValues(alpha: 0.2)
-                        : AppColors.warning.withValues(alpha: 0.3)),
-              ),
-            ),
-            child: Row(
+          // Header Kartu Tracking
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: currentStep == 4
-                      ? AppColors.success
-                      : (isPaymentValid ? AppColors.primary : AppColors.warning),
-                  child: Icon(
-                    currentStep == 4
-                        ? Icons.check_rounded
-                        : (isPaymentValid
-                            ? Icons.directions_car_rounded
-                            : Icons.hourglass_top_rounded),
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(7),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryLight,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.airport_shuttle_rounded,
+                        color: AppColors.primary,
+                        size: 18,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Flexible(
+                                child: Text(
+                                  'Live Tracking Ambulans',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 1.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 5,
+                                      height: 5,
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.primary,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 3),
+                                    const Text(
+                                      'LIVE',
+                                      style: TextStyle(
+                                        fontSize: 8.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColors.primary,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'Tracking Ambulans',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3.5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isPaymentValid
+                              ? AppColors.primaryLight
+                              : AppColors.warningLight,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isPaymentValid
+                                ? AppColors.primary.withValues(alpha: 0.3)
+                                : AppColors.warning.withValues(alpha: 0.4),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isPaymentValid
+                                  ? Icons.navigation_rounded
+                                  : Icons.access_time_filled_rounded,
+                              size: 11,
+                              color: isPaymentValid
+                                  ? AppColors.primary
+                                  : AppColors.warning,
+                            ),
+                            const SizedBox(width: 3),
+                            Flexible(
+                              child: Text(
+                                statusBadge,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: isPaymentValid
+                                      ? AppColors.primaryDark
+                                      : AppColors.warning,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        serviceText,
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.bold,
-                          color: currentStep == 4
-                              ? AppColors.success
-                              : (isPaymentValid
-                                  ? AppColors.primaryDark
-                                  : const Color(0xFFB45309)),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _getStatusExplanation(order.status, isPaymentValid),
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: currentStep == 4
-                              ? AppColors.success
-                              : (isPaymentValid
-                                  ? AppColors.textPrimary
-                                  : AppColors.textSecondary),
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: 8),
+                const Text(
+                  'Pantau perjalanan ambulans menuju lokasi penjemputan Anda.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                    height: 1.3,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 18),
 
-          // Ilustrasi Visual Rute Tracking Ambulans
-          _buildRouteIllustration(currentStep, isPaymentValid),
+          // Area Peta Visual Interaktif
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(16),
+              bottomRight: Radius.circular(16),
+            ),
+            child: LiveTrackingMapView(
+              status: order.status,
+              isPaymentValid: isPaymentValid,
+              height: isDesktop ? 320 : 150,
+              pickupAddress: order.pickupAddress ?? 'Lokasi Penjemputan',
+              destinationAddress:
+                  order.destinationAddress ?? 'Rumah Sakit Tujuan',
+            ),
+          ),
         ],
       ),
     );
   }
 
   int _getTripStepIndex(OrderStatus status, bool isPaymentValid) {
-    if (!isPaymentValid || status == OrderStatus.menungguPembayaran || status == OrderStatus.menungguValidasi) {
+    if (!isPaymentValid ||
+        status == OrderStatus.menungguPembayaran ||
+        status == OrderStatus.menungguValidasi) {
       return 0; // Menunggu konfirmasi / validasi
     }
     switch (status) {
@@ -724,297 +837,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     }
   }
 
-  String _getStatusExplanation(OrderStatus status, bool isPaymentValid) {
-    if (!isPaymentValid) {
-      if (status == OrderStatus.menungguPembayaran) {
-        return 'Silakan lakukan pembayaran dan unggah bukti transfer.';
-      }
-      return 'Bukti pembayaran sedang diverifikasi admin sebelum armada diberangkatkan.';
-    }
-    switch (status) {
-      case OrderStatus.menujuLokasi:
-        return 'Ambulans sedang menuju lokasi penjemputan pasien.';
-      case OrderStatus.tibaDiLokasi:
-        return 'Ambulans telah tiba di lokasi. Tim medis sedang mengevakuasi pasien.';
-      case OrderStatus.dalamPerjalanan:
-        return 'Ambulans sedang melaju membawa pasien menuju rumah sakit rujukan.';
-      case OrderStatus.layananSelesai:
-        return 'Pasien telah diserahterimakan ke IGD rumah sakit tujuan.';
-      default:
-        return 'Armada ambulans siaga bertugas.';
-    }
-  }
-
-  // Ilustrasi Rute Garis Perjalanan dari Penjemputan ke Rumah Sakit
-  Widget _buildRouteIllustration(int currentStep, bool isPaymentValid) {
-    final stages = [
-      {'title': 'Konfirmasi', 'subtitle': 'Validasi & Penugasan'},
-      {'title': 'Menuju Jemput', 'subtitle': 'Perjalanan Sopir'},
-      {'title': 'Pasien Dijemput', 'subtitle': 'Penanganan Medis'},
-      {'title': 'Menuju RS', 'subtitle': 'Perjalanan ke Faskes'},
-      {'title': 'Selesai', 'subtitle': 'Serah Terima Pasien'},
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Expanded(
-                child: Text(
-                  'Alur Tahapan Perjalanan Ambulans',
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Tahap ${currentStep + 1} dari 5',
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-
-          // Horizontal Stepper Bar with Ambulance icon
-          Row(
-            children: List.generate(stages.length, (index) {
-              final isPassed = index <= currentStep;
-              final isCurrent = index == currentStep;
-
-              return Expanded(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isPassed
-                                  ? (index == 4
-                                      ? AppColors.success
-                                      : AppColors.primary)
-                                  : Colors.white,
-                              border: Border.all(
-                                color: isPassed
-                                    ? (index == 4
-                                        ? AppColors.success
-                                        : AppColors.primary)
-                                    : AppColors.border,
-                                width: 2,
-                              ),
-                            ),
-                            child: Center(
-                              child: isCurrent && index > 0 && index < 4
-                                  ? const Icon(
-                                      Icons.airport_shuttle,
-                                      size: 12,
-                                      color: Colors.white,
-                                    )
-                                  : (isPassed
-                                      ? const Icon(
-                                          Icons.check,
-                                          size: 13,
-                                          color: Colors.white,
-                                        )
-                                      : Text(
-                                          '${index + 1}',
-                                          style: const TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        )),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              stages[index]['title']!,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight:
-                                    isCurrent ? FontWeight.bold : FontWeight.w500,
-                                color: isCurrent
-                                    ? AppColors.primary
-                                    : (isPassed
-                                        ? AppColors.textPrimary
-                                        : AppColors.textSecondary),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (index < stages.length - 1)
-                      Container(
-                        height: 2,
-                        width: 8,
-                        color: index < currentStep
-                            ? AppColors.primary
-                            : AppColors.border,
-                        margin: const EdgeInsets.only(bottom: 16),
-                      ),
-                  ],
-                ),
-              );
-            }),
-          ),
-        ],
-      ),
-    );
-  }
-
   // 4. Card Ambulans dan Sopir (Hanya tampil jika sopir ditugaskan)
   Widget _buildDriverCard() {
-    if (!_isDriverAssigned) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(
-                Icons.local_shipping_outlined,
-                size: 18,
-                color: AppColors.primary,
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Ambulans dan Sopir',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const Divider(height: 20, color: AppColors.border),
-          Row(
-            children: [
-              const CircleAvatar(
-                radius: 24,
-                backgroundColor: AppColors.primaryLight,
-                child: Text(
-                  'JS',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Joko Susilo',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Sopir Ambulans Utama (Unit Darurat)',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Ambulans GD • Plat: AB 1199 MED',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primaryDark,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.successLight,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.verified_user_rounded,
-                  color: AppColors.success,
-                  size: 18,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          // Tombol Chat dengan Sopir
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _openChatWithDriver,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 0,
-              ),
-              icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-              label: const Text(
-                'Chat dengan Sopir',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-            ),
-          ),
-        ],
-      ),
+    return DriverInfoCard(
+      isDriverAssigned: _isDriverAssigned,
+      onChatPressed: _openChatWithDriver,
     );
   }
 }

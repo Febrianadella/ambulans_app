@@ -7,11 +7,20 @@ import '../widgets/status_badge.dart';
 class OrderStatusHelper {
   OrderStatusHelper._();
 
-  static String getPaymentStatusText(OrderEntity order, PaymentEntity? payment) {
+  static String getPaymentStatusText(
+    OrderEntity order,
+    PaymentEntity? payment,
+  ) {
     if (payment != null) {
-      if (payment.paymentStatus == 'valid') return 'Pembayaran Valid';
-      if (payment.paymentStatus == 'ditolak') return 'Pembayaran Ditolak';
-      if (payment.paymentStatus == 'menungguValidasi') return 'Menunggu Validasi';
+      if (payment.paymentStatus == 'valid') {
+        return 'Pembayaran Valid';
+      }
+      if (payment.paymentStatus == 'ditolak') {
+        return 'Pembayaran Ditolak';
+      }
+      if (payment.paymentStatus == 'menungguValidasi') {
+        return 'Menunggu Validasi';
+      }
     }
     switch (order.status) {
       case OrderStatus.menungguPembayaran:
@@ -26,7 +35,10 @@ class OrderStatusHelper {
     }
   }
 
-  static StatusBadge getPaymentBadge(OrderEntity order, PaymentEntity? payment) {
+  static StatusBadge getPaymentBadge(
+    OrderEntity order,
+    PaymentEntity? payment,
+  ) {
     final text = getPaymentStatusText(order, payment);
     if (text == 'Pembayaran Valid') {
       return StatusBadge.success(text, icon: Icons.verified_rounded);
@@ -39,7 +51,10 @@ class OrderStatusHelper {
     }
   }
 
-  static String getServiceStatusText(OrderEntity order, PaymentEntity? payment) {
+  static String getServiceStatusText(
+    OrderEntity order,
+    PaymentEntity? payment,
+  ) {
     switch (order.status) {
       case OrderStatus.menungguPembayaran:
       case OrderStatus.menungguValidasi:
@@ -55,7 +70,10 @@ class OrderStatusHelper {
     }
   }
 
-  static StatusBadge getServiceBadge(OrderEntity order, PaymentEntity? payment) {
+  static StatusBadge getServiceBadge(
+    OrderEntity order,
+    PaymentEntity? payment,
+  ) {
     final text = getServiceStatusText(order, payment);
     switch (order.status) {
       case OrderStatus.layananSelesai:
@@ -63,7 +81,10 @@ class OrderStatusHelper {
       case OrderStatus.dalamPerjalanan:
         return StatusBadge.info(text, icon: Icons.local_hospital_rounded);
       case OrderStatus.tibaDiLokasi:
-        return StatusBadge.info(text, icon: Icons.airline_seat_recline_normal_rounded);
+        return StatusBadge.info(
+          text,
+          icon: Icons.airline_seat_recline_normal_rounded,
+        );
       case OrderStatus.menujuLokasi:
         return StatusBadge.warning(text, icon: Icons.navigation_rounded);
       case OrderStatus.menungguValidasi:

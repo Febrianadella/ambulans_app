@@ -233,7 +233,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       mainAxisSpacing: 14,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: isDesktop ? 1.7 : 1.35,
+      childAspectRatio: isDesktop ? 1.45 : 1.35,
       children: const [
         StatCard(
           title: 'Total Pesanan Hari Ini',
@@ -300,6 +300,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       },
     ];
 
+    final realPendingOrders = _orders
+        .where((o) => o.status == OrderStatus.menungguValidasi)
+        .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -308,7 +312,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Text(
-              'Pesanan Terbaru',
+              'Pesanan Perlu Ditindaklanjuti',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -317,11 +321,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ),
             TextButton(
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Navigasi ke Semua Pesanan (Placeholder)'),
-                  ),
-                );
+                setState(() {
+                  _selectedSidebarMenu = 'Validasi Pembayaran';
+                });
               },
               style: TextButton.styleFrom(
                 padding: EdgeInsets.zero,
@@ -333,90 +335,175 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           ],
         ),
         const SizedBox(height: 14),
-        ...pendingOrders.map((o) {
-          final isValidation = o['type'] == 'Validasi Pembayaran';
+        if (realPendingOrders.isNotEmpty)
+          ...realPendingOrders.map((o) {
+            final patient = o.patientName ?? 'Pasien';
+            final route =
+                '${o.pickupAddress ?? "Penjemputan"} -> ${o.destinationAddress ?? "RS Tujuan"}';
+            final amount =
+                '${DateFormatter.formatCurrency(o.totalPrice ?? 0)} (${o.paymentMethod ?? "Transfer"})';
 
-          return Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            o['id']!,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              '#${o.id}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                             ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: StatusBadge.warning('Validasi Pembayaran'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$patient • $route',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textPrimary,
                           ),
-                          const SizedBox(width: 8),
-                          Flexible(child: StatusBadge.warning(o['type']!)),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${o['patient']} • ${o['route']}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textPrimary,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      Text(
-                        '${o['amount']} • ${o['time']}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.textSecondary,
+                        Text(
+                          amount,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Tindakan ${o['action']} untuk ${o['id']} berhasil diproses.',
-                        ),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isValidation
-                        ? AppColors.success
-                        : AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                    visualDensity: VisualDensity.compact,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      ],
                     ),
                   ),
-                  child: Text(
-                    o['action']!,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => _showPaymentValidationDialog(o),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.success,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Validasi',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          );
-        }),
+                ],
+              ),
+            );
+          })
+        else
+          ...pendingOrders.map((o) {
+            final isValidation = o['type'] == 'Validasi Pembayaran';
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              o['id']!,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Flexible(child: StatusBadge.warning(o['type']!)),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${o['patient']} • ${o['route']}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          '${o['amount']} • ${o['time']}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Tindakan ${o['action']} untuk ${o['id']} berhasil diproses.',
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isValidation
+                          ? AppColors.success
+                          : AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      o['action']!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
       ],
     );
   }

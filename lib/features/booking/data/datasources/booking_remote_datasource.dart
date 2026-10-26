@@ -313,7 +313,9 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
     if (orderIndex >= 0) {
       final updated = _inMemoryOrders[orderIndex].copyWith(
-        status: isValid ? OrderStatus.menujuLokasi : OrderStatus.menungguPembayaran,
+        status: isValid
+            ? OrderStatus.menujuLokasi
+            : OrderStatus.menungguPembayaran,
         rejectionReason: isValid ? null : rejectionReason,
       );
       _inMemoryOrders[orderIndex] = updated;
@@ -326,7 +328,9 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       userId: 'USR-20261023-01',
       ambulanceId: 'AMB-101',
       driverId: 'DVR-202',
-      status: isValid ? OrderStatus.menujuLokasi : OrderStatus.menungguPembayaran,
+      status: isValid
+          ? OrderStatus.menujuLokasi
+          : OrderStatus.menungguPembayaran,
       rejectionReason: isValid ? null : rejectionReason,
       createdAt: DateTime.now(),
     );

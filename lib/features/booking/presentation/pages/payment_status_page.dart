@@ -42,8 +42,12 @@ class _PaymentStatusPageState extends State<PaymentStatusPage> {
     });
 
     try {
-      final updatedOrder = await widget.repository.getOrderById(_currentOrder.id);
-      final updatedPayment = await widget.repository.getPaymentByOrderId(_currentOrder.id);
+      final updatedOrder = await widget.repository.getOrderById(
+        _currentOrder.id,
+      );
+      final updatedPayment = await widget.repository.getPaymentByOrderId(
+        _currentOrder.id,
+      );
 
       if (!mounted) return;
       setState(() {
@@ -97,7 +101,12 @@ class _PaymentStatusPageState extends State<PaymentStatusPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Status Icon & Title
-            Center(child: _buildStatusHeader(isRejected: isRejected, isValid: isValid)),
+            Center(
+              child: _buildStatusHeader(
+                isRejected: isRejected,
+                isValid: isValid,
+              ),
+            ),
             const SizedBox(height: 20),
 
             // Keterangan Alur Verifikasi
@@ -203,7 +212,10 @@ class _PaymentStatusPageState extends State<PaymentStatusPage> {
           decoration: BoxDecoration(
             color: bgColor,
             shape: BoxShape.circle,
-            border: Border.all(color: iconColor.withValues(alpha: 0.3), width: 2),
+            border: Border.all(
+              color: iconColor.withValues(alpha: 0.3),
+              width: 2,
+            ),
           ),
           child: Icon(iconData, color: iconColor, size: 40),
         ),
@@ -228,7 +240,10 @@ class _PaymentStatusPageState extends State<PaymentStatusPage> {
     );
   }
 
-  Widget _buildExplanationBanner({required bool isRejected, required bool isValid}) {
+  Widget _buildExplanationBanner({
+    required bool isRejected,
+    required bool isValid,
+  }) {
     String message;
     Color bannerColor;
     Color borderColor;
@@ -236,24 +251,24 @@ class _PaymentStatusPageState extends State<PaymentStatusPage> {
     IconData iconData;
 
     if (isValid) {
-      message =
-          'Pembayaran Anda telah diverifikasi oleh administrator. Unit ambulans sedang dipersiapkan dan segera menuju ke lokasi penjemputan.';
+      message = 'Pembayaran Anda telah diverifikasi oleh administrator. Unit ambulans sedang dipersiapkan dan segera menuju ke lokasi penjemputan.';
       bannerColor = AppColors.successLight;
       borderColor = AppColors.success.withValues(alpha: 0.3);
       textColor = const Color(0xFF065F46);
       iconData = Icons.check_circle_outline_rounded;
     } else if (isRejected) {
-      final reason = _currentOrder.rejectionReason ??
+      final reason =
+          _currentOrder.rejectionReason ??
           _currentPayment.rejectionReason ??
           'Nominal transfer tidak sesuai atau bukti struk buram/tidak terbaca.';
-      message = 'Alasan penolakan: $reason\nSilakan unggah ulang bukti pembayaran yang benar.';
+      message =
+          'Alasan penolakan: $reason\nSilakan unggah ulang bukti pembayaran yang benar.';
       bannerColor = AppColors.errorLight;
       borderColor = AppColors.error.withValues(alpha: 0.3);
       textColor = AppColors.primaryDark;
       iconData = Icons.error_outline_rounded;
     } else {
-      message =
-          'Bukti pembayaran Anda telah diterima dan sedang diperiksa oleh administrator. Status pembayaran akan diperbarui setelah proses verifikasi selesai.';
+      message = 'Bukti pembayaran Anda telah diterima dan sedang diperiksa oleh administrator. Status pembayaran akan diperbarui setelah proses verifikasi selesai.';
       bannerColor = AppColors.warningLight;
       borderColor = AppColors.warning.withValues(alpha: 0.3);
       textColor = const Color(0xFF92400E);
@@ -288,7 +303,10 @@ class _PaymentStatusPageState extends State<PaymentStatusPage> {
     );
   }
 
-  Widget _buildStatusDetailsCard({required bool isRejected, required bool isValid}) {
+  Widget _buildStatusDetailsCard({
+    required bool isRejected,
+    required bool isValid,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -314,7 +332,9 @@ class _PaymentStatusPageState extends State<PaymentStatusPage> {
           const SizedBox(height: 8),
           _buildDetailRow(
             'Metode Pembayaran',
-            _currentPayment.paymentMethod ?? _currentOrder.paymentMethod ?? 'Transfer Bank BCA',
+            _currentPayment.paymentMethod ??
+                _currentOrder.paymentMethod ??
+                'Transfer Bank BCA',
           ),
           const SizedBox(height: 8),
           _buildDetailRow(
@@ -335,7 +355,10 @@ class _PaymentStatusPageState extends State<PaymentStatusPage> {
   }
 
   Widget _buildUploadedProofCard() {
-    final proofName = _currentPayment.paymentProofUrl ?? _currentOrder.paymentProofUrl ?? 'bukti_transfer.jpg';
+    final proofName =
+        _currentPayment.paymentProofUrl ??
+        _currentOrder.paymentProofUrl ??
+        'bukti_transfer.jpg';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -399,7 +422,10 @@ class _PaymentStatusPageState extends State<PaymentStatusPage> {
                       const SizedBox(height: 2),
                       const Text(
                         'Format JPG/PNG • Telah Diterima Sistem',
-                        style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -429,7 +455,10 @@ class _PaymentStatusPageState extends State<PaymentStatusPage> {
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+          style: const TextStyle(
+            fontSize: 12.5,
+            color: AppColors.textSecondary,
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
