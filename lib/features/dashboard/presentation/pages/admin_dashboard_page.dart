@@ -8,6 +8,7 @@ import 'llm_analysis_detail_page.dart';
 import '../../../order_management/presentation/pages/admin_order_page.dart';
 import '../../../ambulance_management/presentation/pages/admin_ambulance_page.dart';
 import '../../../driver_management/presentation/pages/admin_driver_page.dart';
+import '../../../suggestion/presentation/pages/admin_suggestion_pages.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -37,6 +38,8 @@ Widget _buildActiveContent(bool isDesktop) {
       return const AdminAmbulancePage();
     case 'Data Sopir':
       return const AdminDriverPage();
+    case 'Kritik dan Saran':
+      return const AdminSuggestionPage();
     default:
       return _buildMenuPlaceholder(context);
   }
