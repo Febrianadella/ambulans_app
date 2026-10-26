@@ -39,7 +39,7 @@ void main() {
 
     // Temukan field input chat dan tombol kirim
     final inputFinder = find.byType(TextField);
-    final sendButtonFinder = find.byTooltip('Kirim pesan');
+    final sendButtonFinder = find.byIcon(Icons.send);
     expect(inputFinder, findsOneWidget);
     expect(sendButtonFinder, findsOneWidget);
 

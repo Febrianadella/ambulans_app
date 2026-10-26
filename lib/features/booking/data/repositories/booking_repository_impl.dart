@@ -16,19 +16,41 @@ class BookingRepositoryImpl implements BookingRepository {
     required String destinationAddress,
     required double pickupLatitude,
     required double pickupLongitude,
+    String? patientName,
+    String? patientGender,
+    int? patientAge,
+    String? patientPhoneNumber,
     String? notes,
+    String? serviceType,
+    double? basePrice,
+    double? additionalFee,
+    double? totalPrice,
   }) async {
+    final now = DateTime.now();
+    final randomSuffix = (1000 + (now.millisecondsSinceEpoch % 9000)).toString();
+    final uniqueOrderId =
+        'ORD-${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}-$randomSuffix';
+
     final orderModel = OrderModel(
-      id: 'ORD-${DateTime.now().millisecondsSinceEpoch}',
+      id: uniqueOrderId,
       userId: userId,
-      ambulanceId: '',
-      driverId: '',
+      ambulanceId: 'AMB-101',
+      driverId: 'DVR-202',
       status: OrderStatus.menungguPembayaran,
       pickupAddress: pickupAddress,
       destinationAddress: destinationAddress,
       pickupLatitude: pickupLatitude,
       pickupLongitude: pickupLongitude,
-      createdAt: DateTime.now(),
+      patientName: patientName,
+      patientGender: patientGender,
+      patientAge: patientAge,
+      patientPhoneNumber: patientPhoneNumber,
+      notes: notes,
+      serviceType: serviceType ?? 'Ambulans Gawat Darurat (Emergency)',
+      basePrice: basePrice ?? 150000.0,
+      additionalFee: additionalFee ?? 50000.0,
+      totalPrice: totalPrice ?? ((basePrice ?? 150000.0) + (additionalFee ?? 50000.0)),
+      createdAt: now,
     );
 
     return await remoteDataSource.createBooking(orderModel);
@@ -55,8 +77,38 @@ class BookingRepositoryImpl implements BookingRepository {
   @override
   Future<PaymentEntity> submitPaymentProof(
     String orderId,
-    String proofUrl,
-  ) async {
-    return await remoteDataSource.submitPaymentProof(orderId, proofUrl);
+    String proofUrl, {
+    String? paymentMethod,
+    double? amount,
+  }) async {
+    return await remoteDataSource.submitPaymentProof(
+      orderId,
+      proofUrl,
+      paymentMethod: paymentMethod,
+      amount: amount,
+    );
+  }
+
+  @override
+  Future<PaymentEntity?> getPaymentByOrderId(String orderId) async {
+    return await remoteDataSource.getPaymentByOrderId(orderId);
+  }
+
+  @override
+  Future<OrderEntity> validatePayment(
+    String orderId,
+    bool isValid, {
+    String? rejectionReason,
+  }) async {
+    return await remoteDataSource.validatePayment(
+      orderId,
+      isValid,
+      rejectionReason: rejectionReason,
+    );
+  }
+
+  @override
+  Future<List<OrderEntity>> getAllOrders() async {
+    return await remoteDataSource.getAllOrders();
   }
 }

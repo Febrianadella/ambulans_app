@@ -4,17 +4,24 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/empty_state_card.dart';
 import '../../../../core/widgets/stat_card.dart';
 import '../../../../core/widgets/status_badge.dart';
+import '../../../booking/data/datasources/booking_remote_datasource.dart';
+import '../../../booking/data/repositories/booking_repository_impl.dart';
+import '../../../booking/domain/entities/order_entity.dart';
+import '../../../booking/domain/repositories/booking_repository.dart';
 import '../../../chat/presentation/pages/chat_room_page.dart';
 import '../../../tracking/presentation/pages/live_tracking_page.dart';
 
 class SopirDashboardPage extends StatefulWidget {
-  const SopirDashboardPage({super.key});
+  final BookingRepository? bookingRepository;
+
+  const SopirDashboardPage({super.key, this.bookingRepository});
 
   @override
   State<SopirDashboardPage> createState() => _SopirDashboardPageState();
 }
 
 class _SopirDashboardPageState extends State<SopirDashboardPage> {
+  late BookingRepository _repository;
   int _currentNavIndex = 0;
   bool _isAvailable = true;
   bool _hasActiveTask = true;
@@ -28,6 +35,88 @@ class _SopirDashboardPageState extends State<SopirDashboardPage> {
     'Menuju tujuan (RS/Faskes)',
     'Layanan selesai',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _repository = widget.bookingRepository ??
+        BookingRepositoryImpl(
+          remoteDataSource: BookingRemoteDataSourceImpl(),
+        );
+
+    BookingRemoteDataSourceImpl.ordersChangeNotifier.addListener(_syncActiveTask);
+    _syncActiveTask();
+  }
+
+  @override
+  void dispose() {
+    BookingRemoteDataSourceImpl.ordersChangeNotifier.removeListener(_syncActiveTask);
+    super.dispose();
+  }
+
+  Future<void> _syncActiveTask() async {
+    try {
+      final order = await _repository.getOrderById('ORD-20261023-01');
+      if (!mounted) return;
+      setState(() {
+        switch (order.status) {
+          case OrderStatus.menujuLokasi:
+            _currentTripStep = 0;
+            break;
+          case OrderStatus.tibaDiLokasi:
+            _currentTripStep = 1;
+            break;
+          case OrderStatus.dalamPerjalanan:
+            _currentTripStep = 2;
+            break;
+          case OrderStatus.layananSelesai:
+            _currentTripStep = 3;
+            break;
+          default:
+            _currentTripStep = 0;
+        }
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _advanceTripStatus() async {
+    OrderStatus nextStatus;
+    int nextStep;
+
+    if (_currentTripStep == 0) {
+      nextStatus = OrderStatus.tibaDiLokasi;
+      nextStep = 1;
+    } else if (_currentTripStep == 1) {
+      nextStatus = OrderStatus.dalamPerjalanan;
+      nextStep = 2;
+    } else if (_currentTripStep == 2) {
+      nextStatus = OrderStatus.layananSelesai;
+      nextStep = 3;
+    } else {
+      // Siklus ulang untuk simulasi pengujian
+      nextStatus = OrderStatus.menujuLokasi;
+      nextStep = 0;
+    }
+
+    setState(() {
+      _currentTripStep = nextStep;
+    });
+
+    await _repository.updateOrderStatus('ORD-20261023-01', nextStatus);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          nextStep == 3
+              ? 'Layanan pesanan #ORD-20261023-01 selesai! Tercatat di riwayat.'
+              : 'Status diperbarui: ${_tripSteps[nextStep]}',
+        ),
+        backgroundColor: nextStep == 3 ? AppColors.success : AppColors.primary,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -352,7 +441,7 @@ class _SopirDashboardPageState extends State<SopirDashboardPage> {
                 ),
                 const SizedBox(height: 14),
 
-                // 5. Placeholder Peta Navigasi
+                // 5. Peta Rute Navigasi Darurat
                 Container(
                   height: 110,
                   width: double.infinity,
@@ -455,23 +544,7 @@ class _SopirDashboardPageState extends State<SopirDashboardPage> {
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            if (_currentTripStep < _tripSteps.length - 1) {
-                              _currentTripStep++;
-                            } else {
-                              // Reset or complete
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Layanan selesai! Tugas tercatat dalam riwayat.',
-                                  ),
-                                ),
-                              );
-                              _currentTripStep = 0;
-                            }
-                          });
-                        },
+                        onPressed: _advanceTripStatus,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _currentTripStep == 3
                               ? AppColors.success
@@ -507,8 +580,13 @@ class _SopirDashboardPageState extends State<SopirDashboardPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>
-                                const ChatRoomPage(orderId: 'ORD-20261023-01'),
+                            builder: (_) => const ChatRoomPage(
+                              orderId: 'ORD-20261023-01',
+                              driverName: 'Joko Susilo',
+                              driverPlate: 'AB 1199 MED',
+                              patientName: 'Budi Pratama',
+                              isFromDriver: true,
+                            ),
                           ),
                         );
                       },
