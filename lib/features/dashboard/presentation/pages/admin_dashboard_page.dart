@@ -7,6 +7,7 @@ import 'llm_analysis_detail_page.dart';
 
 import '../../../order_management/presentation/pages/admin_order_page.dart';
 import '../../../ambulance_management/presentation/pages/admin_ambulance_page.dart';
+import '../../../driver_management/presentation/pages/admin_driver_page.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -34,6 +35,8 @@ Widget _buildActiveContent(bool isDesktop) {
       return const OrdersPage();
     case 'Data Ambulan':
       return const AdminAmbulancePage();
+    case 'Data Sopir':
+      return const AdminDriverPage();
     default:
       return _buildMenuPlaceholder(context);
   }
