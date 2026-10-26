@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/llm_summary_card.dart';
 import '../../../../core/widgets/stat_card.dart';
 import '../../../../core/widgets/status_badge.dart';
 import 'llm_analysis_detail_page.dart';
@@ -14,21 +13,14 @@ class AdminDashboardPage extends StatefulWidget {
 }
 
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
-  String _selectedSidebarMenu = 'Beranda';
+String _selectedSidebarMenu = 'Beranda';
 
   final List<Map<String, dynamic>> _sidebarItems = [
     {'title': 'Beranda', 'icon': Icons.dashboard_outlined},
     {'title': 'Pesanan', 'icon': Icons.shopping_bag_outlined},
-    {'title': 'Validasi Pembayaran', 'icon': Icons.payments_outlined},
-    {'title': 'Penugasan', 'icon': Icons.assignment_ind_outlined},
     {'title': 'Data Ambulans', 'icon': Icons.airport_shuttle_outlined},
     {'title': 'Data Sopir', 'icon': Icons.badge_outlined},
-    {'title': 'Data Dokter', 'icon': Icons.medical_services_outlined},
-    {'title': 'Data Perawat', 'icon': Icons.health_and_safety_outlined},
-    {'title': 'Tarif', 'icon': Icons.price_change_outlined},
     {'title': 'Kritik dan Saran', 'icon': Icons.feedback_outlined},
-    {'title': 'Analisis LLM', 'icon': Icons.auto_awesome_outlined},
-    {'title': 'Laporan', 'icon': Icons.analytics_outlined},
   ];
 
   @override
@@ -175,184 +167,161 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 2. Empat Kartu Statistik
           _buildFourStatCards(isDesktop),
-          const SizedBox(height: 20),
-
-          // Layout 2 Kolom untuk Desktop, 1 Kolom untuk Mobile
-          if (isDesktop)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 6,
-                  child: Column(
-                    children: [
-                      _buildActionRequiredOrdersCard(),
-                      const SizedBox(height: 20),
-                      _buildLlmSummarySection(context),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  flex: 4,
-                  child: Column(
-                    children: [
-                      _buildFleetStatusCard(),
-                      const SizedBox(height: 20),
-                      _buildFeedbackRatingCard(),
-                      const SizedBox(height: 20),
-                      _buildRecentOperationalActivityCard(),
-                    ],
-                  ),
-                ),
-              ],
-            )
-          else ...[
-            _buildActionRequiredOrdersCard(),
-            const SizedBox(height: 18),
-            _buildFleetStatusCard(),
-            const SizedBox(height: 18),
-            _buildFeedbackRatingCard(),
-            const SizedBox(height: 18),
-            _buildLlmSummarySection(context),
-            const SizedBox(height: 18),
-            _buildRecentOperationalActivityCard(),
-          ],
+          const SizedBox(height: 24), // Jarak antara statistik dan bagian pesanan
+          _buildRecentOrdersSection(context),
         ],
       ),
     );
   }
 
-  // 2. Empat Kartu Statistik
+  // 4 Kartu Statistik
+  // 4 Kartu Statistik dengan Layout Fleksibel (Wrap)
   Widget _buildFourStatCards(bool isDesktop) {
-    return GridView.count(
-      crossAxisCount: isDesktop ? 4 : 2,
-      crossAxisSpacing: 14,
-      mainAxisSpacing: 14,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: isDesktop ? 1.7 : 1.35,
-      children: const [
-        StatCard(
-          title: 'Total Pesanan Hari Ini',
-          value: '28',
-          icon: Icons.assignment_outlined,
-          color: AppColors.primary,
-          subtitle: '+12% dari kemarin',
-        ),
-        StatCard(
-          title: 'Menunggu Validasi',
-          value: '3',
-          icon: Icons.hourglass_top_rounded,
-          color: AppColors.warning,
-          subtitle: 'Perlu verifikasi bank',
-        ),
-        StatCard(
-          title: 'Pesanan Berlangsung',
-          value: '5',
-          icon: Icons.moving_rounded,
-          color: AppColors.secondary,
-          subtitle: 'Unit di lapangan',
-        ),
-        StatCard(
-          title: 'Ambulans Tersedia',
-          value: '8 / 12',
-          icon: Icons.local_hospital_outlined,
-          color: AppColors.success,
-          subtitle: 'Standby di pangkalan',
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Menghitung lebar card secara dinamis berdasarkan lebar layar saat ini
+        // Jika layar lebar, bagi 2 (dikurangi jarak spasi). Jika layar sempit, ambil lebar penuh (100%).
+        final double cardWidth = constraints.maxWidth > 600 
+            ? (constraints.maxWidth - 16) / 2 
+            : constraints.maxWidth;
+
+        return Wrap(
+          spacing: 16, // Jarak ke samping antar card
+          runSpacing: 16, // Jarak ke bawah antar baris saat card turun
+          children: [
+            SizedBox(
+              width: cardWidth,
+              child: const StatCard(
+                title: 'Total Pesanan Hari Ini',
+                value: '28',
+                icon: Icons.assignment_outlined,
+                color: AppColors.primary,
+                subtitle: '+12% dari kemarin',
+              ),
+            ),
+            SizedBox(
+              width: cardWidth,
+              child: const StatCard(
+                title: 'Menunggu Validasi',
+                value: '3',
+                icon: Icons.hourglass_top_rounded,
+                color: AppColors.warning,
+                subtitle: 'Perlu verifikasi pembayaran',
+              ),
+            ),
+            SizedBox(
+              width: cardWidth,
+              child: const StatCard(
+                title: 'Pesanan Aktif',
+                value: '5',
+                icon: Icons.moving_rounded,
+                color: AppColors.secondary,
+                subtitle: 'Unit dalam pengerahan',
+              ),
+            ),
+            SizedBox(
+              width: cardWidth,
+              child: const StatCard(
+                title: 'Ambulans Tersedia',
+                value: '8 / 12',
+                icon: Icons.local_hospital_outlined,
+                color: AppColors.success,
+                subtitle: 'Siap ditugaskan',
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  // 3. Card Pesanan Perlu Ditindaklanjuti
-  Widget _buildActionRequiredOrdersCard() {
-    final pendingOrders = [
+  // Bagian Utama Pesanan Terbaru
+  Widget _buildRecentOrdersSection(BuildContext context) {
+    // Data dummy placeholder untuk 3 pesanan terbaru
+    final recentOrders = [
       {
-        'id': '#ORD-20261023-04',
-        'type': 'Validasi Pembayaran',
-        'patient': 'Bpk. Hendrawan',
-        'route': 'Sleman -> RS Panti Rapih',
-        'time': '5 mnt lalu',
-        'amount': 'Rp 250.000 (Mandiri)',
-        'action': 'Validasi',
+        'id': '#ORD-20261023-08',
+        'patient': 'Bpk. Hartono',
+        'route': 'Condongcatur -> RS JIH',
+        'status': 'Menunggu Konfirmasi',
+        'time': '2 mnt lalu',
       },
       {
-        'id': '#ORD-20261023-05',
-        'type': 'Penugasan Sopir',
-        'patient': 'Ny. Wahyuni',
-        'route': 'Bantul -> RS PKU Bantul',
-        'time': '8 mnt lalu',
-        'amount': 'Sudah Valid',
-        'action': 'Tugaskan',
+        'id': '#ORD-20261023-07',
+        'patient': 'Ny. Siti Aminah',
+        'route': 'Godean -> RSUP Dr. Sardjito',
+        'status': 'Sedang Berjalan',
+        'time': '10 mnt lalu',
       },
       {
         'id': '#ORD-20261023-06',
-        'type': 'Validasi Pembayaran',
-        'patient': 'Bpk. Sugeng',
-        'route': 'Kota -> RS Bethesda',
-        'time': '14 mnt lalu',
-        'amount': 'Rp 200.000 (BCA)',
-        'action': 'Validasi',
+        'patient': 'Bpk. Budi Santoso',
+        'route': 'Malioboro -> RS PKU Muhammadiyah',
+        'status': 'Selesai',
+        'time': '25 mnt lalu',
       },
     ];
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Expanded(
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.warning_amber_rounded,
-                      color: AppColors.warning,
-                      size: 20,
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Pesanan Perlu Ditindaklanjuti',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header: Kiri (Judul), Kanan (Tombol Lihat Semua)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center, // <-- BENAR
+          children: [
+            const Text(
+              'Pesanan Terbaru',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Navigasi ke Semua Pesanan (Placeholder)')),
+                );
+              },
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Text(
+                'Lihat Semua',
+                style: TextStyle(
+                  fontSize: 13, // Ukuran proporsional lebih kecil dari header
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
                 ),
               ),
-              const SizedBox(width: 8),
-              StatusBadge.warning('3 Pesanan Menunggu'),
-            ],
-          ),
-          const SizedBox(height: 14),
-          ...pendingOrders.map((o) {
-            final isValidation = o['type'] == 'Validasi Pembayaran';
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        
+        // Daftar Card Pesanan (Vertikal & Scrollable)
+        ListView.builder(
+          itemCount: recentOrders.length,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(), // Karena sudah dibungkus SingleChildScrollView di induknya
+          itemBuilder: (context, index) {
+            final order = recentOrders[index];
             return Container(
               margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(10),
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.border),
               ),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // Informasi Pesanan di Kiri
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,327 +329,65 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         Row(
                           children: [
                             Text(
-                              o['id']!,
+                              order['id']!,
                               style: const TextStyle(
-                                fontWeight: FontWeight.bold,
                                 fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Flexible(
-                              child: StatusBadge.warning(o['type']!),
+                            Text(
+                              '• ${order['time']}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${o['patient']} • ${o['route']}',
+                          order['patient']!,
                           style: const TextStyle(
                             fontSize: 12,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary,
                           ),
                         ),
+                        const SizedBox(height: 2),
                         Text(
-                          '${o['amount']} • ${o['time']}',
+                          order['route']!,
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 12,
                             color: AppColors.textSecondary,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Tindakan ${o['action']} untuk ${o['id']} berhasil diproses.',
-                          ),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isValidation
-                          ? AppColors.success
-                          : AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      visualDensity: VisualDensity.compact,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                  // Status di Kanan Card
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      o['action']!,
+                      order['status']!,
                       style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  // 4. Card Status Armada
-  Widget _buildFleetStatusCard() {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Status Armada Ambulans (12 Unit)',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 14),
-          _buildFleetProgressRow(
-            'Tersedia (Standby)',
-            8,
-            12,
-            AppColors.success,
-          ),
-          const SizedBox(height: 10),
-          _buildFleetProgressRow('Sedang Bertugas', 3, 12, AppColors.primary),
-          const SizedBox(height: 10),
-          _buildFleetProgressRow(
-            'Perawatan / Servis Rutin',
-            1,
-            12,
-            AppColors.warning,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFleetProgressRow(
-    String label,
-    int count,
-    int total,
-    Color color,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '$count unit',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        const SizedBox(height: 5),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: count / total,
-            backgroundColor: AppColors.border,
-            valueColor: AlwaysStoppedAnimation<Color>(color),
-            minHeight: 6,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // 5. Card Kritik dan Saran Pengguna
-  Widget _buildFeedbackRatingCard() {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Expanded(
-                child: Text(
-                  'Kritik & Saran Pengguna',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              StatusBadge.info('47 Masukan'),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              const Text(
-                '4.6',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: List.generate(5, (index) {
-                        return Icon(
-                          index < 4
-                              ? Icons.star_rounded
-                              : Icons.star_half_rounded,
-                          color: AppColors.warning,
-                          size: 16,
-                        );
-                      }),
-                    ),
-                    const Text(
-                      'Rata-rata rating bulan ini',
-                      style: TextStyle(
                         fontSize: 11,
-                        color: AppColors.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 6. Card Ringkasan Analisis LLM
-  Widget _buildLlmSummarySection(BuildContext context) {
-    return LlmSummaryCard(
-      totalFeedbackAnalyzed: 47,
-      topComplaintTopics: const [
-        'Waktu Tunggu Penjemputan',
-        'Kenyamanan Suspensi Armada',
-        'Validasi Pembayaran',
-      ],
-      feedbackSummary: 'Pengguna umumnya sangat mengapresiasi keramahan tim medis dan respons panggilan. Sekitar 45% keluhan berfokus pada waktu kedatangan ambulans saat jam padat lalu lintas.',
-      improvementSuggestions: '1. Implementasikan algoritma rute dinamis berbasis GPS.\n2. Lakukan pengecekan suspensi armada unit 03 dan 07.\n3. Otomasi verifikasi transfer bank dengan QRIS/Payment Gateway.',
-      lastAnalyzedTime: 'Hari ini, 08:30 WIB',
-      onOpenDetail: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const LlmAnalysisDetailPage()),
-        );
-      },
-    );
-  }
-
-  // 7. Aktivitas Operasional Terbaru
-  Widget _buildRecentOperationalActivityCard() {
-    final activities = [
-      {
-        'time': '09:12',
-        'desc': 'Sopir Joko Susilo mengonfirmasi tiba di RSUP Dr. Sardjito.',
-      },
-      {
-        'time': '08:55',
-        'desc': 'Validasi pembayaran pesanan #ORD-20261023-03 disetujui.',
-      },
-      {
-        'time': '08:40',
-        'desc': 'Panggilan darurat baru #ORD-20261023-04 dari Danurejan.',
-      },
-      {
-        'time': '08:15',
-        'desc': 'Ambulans unit AB 1199 MED status aktif dan siap jalan.',
-      },
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Aktivitas Operasional Terbaru',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ...activities.map((a) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    a['time']!,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      a['desc']!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
                 ],
               ),
             );
-          }),
-        ],
-      ),
+          },
+        ),
+      ],
     );
   }
 
@@ -765,18 +472,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           vertical: 2,
                         ),
                         onTap: () {
-                          if (item['title'] == 'Analisis LLM') {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const LlmAnalysisDetailPage(),
-                              ),
-                            );
-                          } else {
-                            setState(() {
-                              _selectedSidebarMenu = item['title'] as String;
-                            });
-                          }
+                          setState(() {
+                            _selectedSidebarMenu = item['title'] as String;
+                          });
                         },
                       ),
                     ),
@@ -824,18 +522,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   title: Text(item['title'] as String),
                   onTap: () {
                     Navigator.pop(context);
-                    if (item['title'] == 'Analisis LLM') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const LlmAnalysisDetailPage(),
-                        ),
-                      );
-                    } else {
-                      setState(() {
-                        _selectedSidebarMenu = item['title'] as String;
-                      });
-                    }
+                    setState(() {
+                      _selectedSidebarMenu = item['title'] as String;
+                    });
                   },
                 );
               }).toList(),
@@ -847,6 +536,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   Widget _buildMenuPlaceholder(BuildContext context) {
+    String detailInfo =
+        'Menu ini telah siap dihubungkan dengan API endpoint backend dan manajemen database.';
+    
+    if (_selectedSidebarMenu == 'Kritik dan Saran') {
+      detailInfo =
+          'Daftar masukan serta ulasan dari pengguna untuk evaluasi peningkatan mutu layanan ambulans.';
+    }
+
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -875,9 +572,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  'Menu ini telah siap dihubungkan dengan API endpoint backend dan manajemen database.',
-                  style: TextStyle(
+                Text(
+                  detailInfo,
+                  style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 13,
                   ),

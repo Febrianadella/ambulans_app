@@ -4,8 +4,8 @@ import 'package:ambulans_app/main.dart';
 import 'package:ambulans_app/features/auth/domain/entities/user_entity.dart';
 
 void main() {
-  group('6 Actor Dashboards Navigation Smoke Test', () {
-    testWidgets('Renders and switches across all 6 actor dashboards smoothly', (
+  group('3 Actor Dashboards Navigation Smoke Test', () {
+    testWidgets('Renders and switches across all 3 actor dashboards smoothly', (
       WidgetTester tester,
     ) async {
       // Set test screen size large enough for desktop & mobile components
@@ -34,25 +34,10 @@ void main() {
       expect(find.text('Dashboard Administrator'), findsOneWidget);
       expect(find.text('Pesanan Perlu Ditindaklanjuti'), findsOneWidget);
 
-      // 4. Switch to Kepala
-      await tester.tap(find.text(UserRole.kepala.label));
-      await tester.pumpAndSettle();
-      expect(find.text('Dashboard Kepala Ambulans'), findsOneWidget);
-      expect(find.text('Tren Jumlah Layanan Mingguan'), findsOneWidget);
-
-      // 5. Switch to Perawat
-      await tester.ensureVisible(find.text(UserRole.perawat.label));
-      await tester.tap(find.text(UserRole.perawat.label));
-      await tester.pumpAndSettle();
-      expect(find.text('Ns. Sarah Amelia, S.Kep'), findsOneWidget);
-      expect(find.text('Buat Laporan Pasien'), findsOneWidget);
-
-      // 6. Switch to Dokter
-      await tester.ensureVisible(find.text(UserRole.dokter.label));
-      await tester.tap(find.text(UserRole.dokter.label));
-      await tester.pumpAndSettle();
-      expect(find.text('dr. Farhan Malik, Sp.An'), findsOneWidget);
-      expect(find.text('Status Notifikasi Otomatis Dokter'), findsOneWidget);
+      // Pastikan peran yang dihapus tidak muncul di navigasi
+      expect(find.text('Kepala Ambulans'), findsNothing);
+      expect(find.text('Perawat'), findsNothing);
+      expect(find.text('Dokter'), findsNothing);
     });
   });
 }

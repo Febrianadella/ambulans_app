@@ -8,34 +8,31 @@ import 'package:ambulans_app/features/medical_report/data/models/medical_report_
 
 void main() {
   group('Clean Architecture Data Models Test', () {
-    test('UserModel serialization and deserialization (6 Roles)', () {
+    test('UserModel serialization and deserialization (3 Roles)', () {
       final jsonMap = {
         'id': 'USR-123',
-        'name': 'Dr. Budi Santoso',
-        'email': 'budi@hospital.com',
-        'role': 'dokter',
+        'name': 'Rina Administrator',
+        'email': 'admin@hospital.com',
+        'role': 'admin',
         'phoneNumber': '081234567890',
-        'profilePhotoUrl': 'https://example.com/budi.jpg',
+        'profilePhotoUrl': 'https://example.com/rina.jpg',
       };
 
       final user = UserModel.fromJson(jsonMap);
       expect(user.id, 'USR-123');
-      expect(user.name, 'Dr. Budi Santoso');
-      expect(user.email, 'budi@hospital.com');
-      expect(user.role, UserRole.dokter);
-      expect(user.role.isDokter, isTrue);
+      expect(user.name, 'Rina Administrator');
+      expect(user.email, 'admin@hospital.com');
+      expect(user.role, UserRole.admin);
+      expect(user.role.isAdmin, isTrue);
 
       final serialized = user.toJson();
       expect(serialized['id'], 'USR-123');
-      expect(serialized['role'], 'dokter');
+      expect(serialized['role'], 'admin');
 
-      // Test all 6 roles
+      // Test all 3 roles
       expect(UserRole.fromString('pengguna'), UserRole.pengguna);
       expect(UserRole.fromString('sopir'), UserRole.sopir);
       expect(UserRole.fromString('admin'), UserRole.admin);
-      expect(UserRole.fromString('kepala'), UserRole.kepala);
-      expect(UserRole.fromString('perawat'), UserRole.perawat);
-      expect(UserRole.fromString('dokter'), UserRole.dokter);
     });
 
     test('OrderModel serialization and deserialization (All Statuses)', () {
