@@ -6,6 +6,7 @@ import '../../../../core/widgets/status_badge.dart';
 import 'llm_analysis_detail_page.dart';
 
 import '../../../order_management/presentation/pages/admin_order_page.dart';
+import '../../../ambulance_management/presentation/pages/admin_ambulance_page.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -20,48 +21,55 @@ String _selectedSidebarMenu = 'Beranda';
   final List<Map<String, dynamic>> _sidebarItems = [
     {'title': 'Beranda', 'icon': Icons.dashboard_outlined},
     {'title': 'Pesanan', 'icon': Icons.shopping_bag_outlined},
-    {'title': 'Data Ambulans', 'icon': Icons.airport_shuttle_outlined},
+    {'title': 'Data Ambulan', 'icon': Icons.airport_shuttle_outlined},
     {'title': 'Data Sopir', 'icon': Icons.badge_outlined},
     {'title': 'Kritik dan Saran', 'icon': Icons.feedback_outlined},
   ];
+// 1. Buat fungsi helper ini di dalam kelas AdminDashboardPage Anda
+Widget _buildActiveContent(bool isDesktop) {
+  switch (_selectedSidebarMenu) {
+    case 'Beranda':
+      return _buildDashboardHome(context, isDesktop);
+    case 'Pesanan':
+      return const OrdersPage();
+    case 'Data Ambulan':
+      return const AdminAmbulancePage();
+    default:
+      return _buildMenuPlaceholder(context);
+  }
+}
 
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth >= 850;
+// 2. Di dalam method build, Anda tinggal memanggilnya dengan sangat bersih:
+@override
+Widget build(BuildContext context) {
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      final isDesktop = constraints.maxWidth >= 850;
 
-        return Scaffold(
-          backgroundColor: AppColors.background,
-          drawer: isDesktop ? null : _buildDrawer(),
-          body: Row(
-            children: [
-              // Sidebar for Desktop
-              if (isDesktop) _buildDesktopSidebar(),
-
-              // Main Content Area
-              Expanded(
-                child: SafeArea(
-                  child: Column(
-                    children: [
-                      _buildHeader(isDesktop),
-                                           Expanded(
-                        child: _selectedSidebarMenu == 'Beranda'
-                            ? _buildDashboardHome(context, isDesktop)
-                            : _selectedSidebarMenu == 'Pesanan'
-                                ? OrdersPage() // Memanggil widget dari file admin_order_page.dart
-                                : _buildMenuPlaceholder(context),
-                      ),
-                    ],
-                  ),
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        drawer: isDesktop ? null : _buildDrawer(),
+        body: Row(
+          children: [
+            if (isDesktop) _buildDesktopSidebar(),
+            Expanded(
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    _buildHeader(isDesktop),
+                    Expanded(
+                      child: _buildActiveContent(isDesktop), // <-- Jauh lebih bersih!
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
 
   // Header
   Widget _buildHeader(bool isDesktop) {
@@ -91,8 +99,8 @@ String _selectedSidebarMenu = 'Beranda';
                 children: [
                   Text(
                     _selectedSidebarMenu == 'Beranda' 
-                        ? 'Dashboard Administrator' 
-                        : 'Manajemen $_selectedSidebarMenu',
+                        ? 'Dashboard ' 
+                        : '$_selectedSidebarMenu',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
