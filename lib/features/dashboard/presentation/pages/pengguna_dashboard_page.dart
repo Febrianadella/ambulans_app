@@ -56,10 +56,9 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.bookingRepository ??
-        BookingRepositoryImpl(
-          remoteDataSource: BookingRemoteDataSourceImpl(),
-        );
+    _repository =
+        widget.bookingRepository ??
+        BookingRepositoryImpl(remoteDataSource: BookingRemoteDataSourceImpl());
 
     _nameController = TextEditingController(text: _userName);
     _phoneController = TextEditingController(text: _userPhone);
@@ -131,9 +130,7 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: _buildActiveTab(context),
-      ),
+      body: SafeArea(child: _buildActiveTab(context)),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentNavIndex,
         onTap: (index) {
@@ -294,7 +291,9 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Semua notifikasi darurat telah diperbarui.'),
+                      content: Text(
+                        'Semua notifikasi darurat telah diperbarui.',
+                      ),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -491,9 +490,8 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => BookingPage(
-                              bookingRepository: _repository,
-                            ),
+                            builder: (_) =>
+                                BookingPage(bookingRepository: _repository),
                           ),
                         );
                       },
@@ -565,10 +563,7 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
                 children: [
                   Text(
                     'Lihat Riwayat',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(width: 2),
                   Icon(Icons.chevron_right_rounded, size: 18),
@@ -583,8 +578,7 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
           EmptyStateCard(
             icon: Icons.local_shipping_outlined,
             title: 'Belum ada pesanan aktif',
-            message:
-                'Saat ini Anda tidak memiliki panggilan ambulans yang sedang berjalan.',
+            message: 'Saat ini Anda tidak memiliki panggilan ambulans yang sedang berjalan.',
             buttonText: 'Pesan Ambulans',
             buttonIcon: Icons.add,
             onButtonPressed: () {
@@ -628,7 +622,10 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
                     ),
                     const SizedBox(width: 8),
                     Flexible(
-                      child: OrderStatusHelper.getServiceBadge(active, _activePayment),
+                      child: OrderStatusHelper.getServiceBadge(
+                        active,
+                        _activePayment,
+                      ),
                     ),
                   ],
                 ),
@@ -644,11 +641,17 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      OrderStatusHelper.getPaymentStatusText(active, _activePayment),
+                      OrderStatusHelper.getPaymentStatusText(
+                        active,
+                        _activePayment,
+                      ),
                       style: TextStyle(
                         fontSize: 11,
-                        color: OrderStatusHelper.getPaymentStatusText(
-                                    active, _activePayment) ==
+                        color:
+                            OrderStatusHelper.getPaymentStatusText(
+                                  active,
+                                  _activePayment,
+                                ) ==
                                 'Pembayaran Valid'
                             ? AppColors.success
                             : AppColors.warning,
@@ -671,7 +674,8 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
                 const SizedBox(height: 12),
 
                 // Nama Pasien
-                if (active.patientName != null && active.patientName!.isNotEmpty)
+                if (active.patientName != null &&
+                    active.patientName!.isNotEmpty)
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -708,7 +712,8 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
                 // Lokasi Penjemputan & Rumah Sakit Tujuan
                 _buildRouteLine(
                   pickup: active.pickupAddress ?? 'Titik Jemput',
-                  destination: active.destinationAddress ?? 'Rumah Sakit Tujuan',
+                  destination:
+                      active.destinationAddress ?? 'Rumah Sakit Tujuan',
                 ),
                 const Divider(height: 24, color: AppColors.border),
 
@@ -792,7 +797,8 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
                           const SizedBox(height: 2),
                           Text(
                             DateFormatter.formatCurrency(
-                                (active.totalPrice ?? 250000).toDouble()),
+                              (active.totalPrice ?? 250000).toDouble(),
+                            ),
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontSize: 16,
@@ -928,10 +934,12 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
   Widget _buildRiwayatTab(BuildContext context) {
     final filtered = _filteredOrders;
     final totalCount = _orders.length;
-    final activeCount =
-        _orders.where((o) => o.status != OrderStatus.layananSelesai).length;
-    final completedCount =
-        _orders.where((o) => o.status == OrderStatus.layananSelesai).length;
+    final activeCount = _orders
+        .where((o) => o.status != OrderStatus.layananSelesai)
+        .length;
+    final completedCount = _orders
+        .where((o) => o.status == OrderStatus.layananSelesai)
+        .length;
 
     return RefreshIndicator(
       color: AppColors.primary,
@@ -977,21 +985,23 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
                   ? const Center(
                       child: Padding(
                         padding: EdgeInsets.all(32.0),
-                        child: CircularProgressIndicator(color: AppColors.primary),
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                        ),
                       ),
                     )
                   : filtered.isEmpty
-                      ? _buildEmptyRiwayatState()
-                      : ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: filtered.length,
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (context, index) {
-                            return _buildRiwayatCard(filtered[index]);
-                          },
-                        ),
+                  ? _buildEmptyRiwayatState()
+                  : ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: filtered.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        return _buildRiwayatCard(filtered[index]);
+                      },
+                    ),
             ),
             const SizedBox(height: 24),
           ],
@@ -1138,10 +1148,8 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => OrderDetailPage(
-              orderId: order.id,
-              repository: _repository,
-            ),
+            builder: (_) =>
+                OrderDetailPage(orderId: order.id, repository: _repository),
           ),
         );
       },
@@ -1209,18 +1217,14 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
             Wrap(
               spacing: 6,
               runSpacing: 6,
-              children: [
-                serviceBadge,
-                paymentBadge,
-              ],
+              children: [serviceBadge, paymentBadge],
             ),
             const SizedBox(height: 12),
 
             // Rute: Lokasi Penjemputan & Tujuan Rumah Sakit
             _buildRouteLine(
               pickup: order.pickupAddress ?? 'Titik Penjemputan',
-              destination:
-                  order.destinationAddress ?? 'Rumah Sakit Tujuan',
+              destination: order.destinationAddress ?? 'Rumah Sakit Tujuan',
             ),
             const Divider(height: 20, color: AppColors.border),
 
@@ -1291,8 +1295,8 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
         message: _selectedHistoryFilterIndex == 1
             ? 'Tidak ada pesanan ambulans yang sedang berlangsung saat ini.'
             : (_selectedHistoryFilterIndex == 2
-                ? 'Belum ada pesanan ambulans yang selesai tercatat.'
-                : 'Anda belum memiliki riwayat panggilan ambulans di akun ini.'),
+                  ? 'Belum ada pesanan ambulans yang selesai tercatat.'
+                  : 'Anda belum memiliki riwayat panggilan ambulans di akun ini.'),
         buttonText: 'Pesan Ambulans',
         buttonIcon: Icons.add_rounded,
         onButtonPressed: () {
@@ -1601,7 +1605,9 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
                           hintText: 'Masukkan nama lengkap',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.border),
+                            borderSide: const BorderSide(
+                              color: AppColors.border,
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -1646,7 +1652,9 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
                           hintText: 'Contoh: 081234567890',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.border),
+                            borderSide: const BorderSide(
+                              color: AppColors.border,
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -1664,7 +1672,10 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
                           if (value == null || value.trim().isEmpty) {
                             return 'Nomor telepon tidak boleh kosong';
                           }
-                          final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
+                          final digits = value.replaceAll(
+                            RegExp(r'[^0-9]'),
+                            '',
+                          );
                           if (digits.length < 8) {
                             return 'Format nomor telepon minimal 8 digit';
                           }
@@ -1695,7 +1706,8 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
                               size: 20,
                             ),
                           ),
-                          helperText: 'Digunakan sebagai saran lokasi penjemputan.',
+                          helperText:
+                              'Digunakan sebagai saran lokasi penjemputan.',
                           helperStyle: const TextStyle(
                             fontSize: 11,
                             color: AppColors.textSecondary,
@@ -1703,7 +1715,9 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
                           hintText: 'Masukkan alamat tempat tinggal Anda',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.border),
+                            borderSide: const BorderSide(
+                              color: AppColors.border,
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -1752,7 +1766,10 @@ class _PenggunaDashboardPageState extends State<PenggunaDashboardPage> {
 
               // E. Informasi Tambahan
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primaryLight.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(10),

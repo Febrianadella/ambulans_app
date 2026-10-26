@@ -81,8 +81,8 @@ class OrderModel extends OrderEntity {
       serviceType:
           json['serviceType'] as String? ?? json['service_type'] as String?,
       basePrice: (json['basePrice'] ?? json['base_price'] as num?)?.toDouble(),
-      additionalFee:
-          (json['additionalFee'] ?? json['additional_fee'] as num?)?.toDouble(),
+      additionalFee: (json['additionalFee'] ?? json['additional_fee'] as num?)
+          ?.toDouble(),
       rejectionReason:
           json['rejectionReason'] as String? ??
           json['rejection_reason'] as String?,

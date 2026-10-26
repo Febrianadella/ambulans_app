@@ -39,18 +39,21 @@ class _SopirDashboardPageState extends State<SopirDashboardPage> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.bookingRepository ??
-        BookingRepositoryImpl(
-          remoteDataSource: BookingRemoteDataSourceImpl(),
-        );
+    _repository =
+        widget.bookingRepository ??
+        BookingRepositoryImpl(remoteDataSource: BookingRemoteDataSourceImpl());
 
-    BookingRemoteDataSourceImpl.ordersChangeNotifier.addListener(_syncActiveTask);
+    BookingRemoteDataSourceImpl.ordersChangeNotifier.addListener(
+      _syncActiveTask,
+    );
     _syncActiveTask();
   }
 
   @override
   void dispose() {
-    BookingRemoteDataSourceImpl.ordersChangeNotifier.removeListener(_syncActiveTask);
+    BookingRemoteDataSourceImpl.ordersChangeNotifier.removeListener(
+      _syncActiveTask,
+    );
     super.dispose();
   }
 

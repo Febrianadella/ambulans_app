@@ -27,7 +27,8 @@ class BookingRepositoryImpl implements BookingRepository {
     double? totalPrice,
   }) async {
     final now = DateTime.now();
-    final randomSuffix = (1000 + (now.millisecondsSinceEpoch % 9000)).toString();
+    final randomSuffix = (1000 + (now.millisecondsSinceEpoch % 9000))
+        .toString();
     final uniqueOrderId =
         'ORD-${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}-$randomSuffix';
 
@@ -49,7 +50,8 @@ class BookingRepositoryImpl implements BookingRepository {
       serviceType: serviceType ?? 'Ambulans Gawat Darurat (Emergency)',
       basePrice: basePrice ?? 150000.0,
       additionalFee: additionalFee ?? 50000.0,
-      totalPrice: totalPrice ?? ((basePrice ?? 150000.0) + (additionalFee ?? 50000.0)),
+      totalPrice:
+          totalPrice ?? ((basePrice ?? 150000.0) + (additionalFee ?? 50000.0)),
       createdAt: now,
     );
 

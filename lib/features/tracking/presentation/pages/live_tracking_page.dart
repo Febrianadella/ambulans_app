@@ -110,7 +110,10 @@ class LiveTrackingPage extends StatelessWidget {
                             children: [
                               Text(
                                 'Joko Susilo • AB 1199 MED',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
                               ),
                               SizedBox(height: 2),
                               Text(

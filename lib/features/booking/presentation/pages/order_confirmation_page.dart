@@ -84,10 +84,8 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => PaymentPage(
-            order: createdOrder,
-            repository: widget.repository,
-          ),
+          builder: (_) =>
+              PaymentPage(order: createdOrder, repository: widget.repository),
         ),
       );
     } catch (e) {
@@ -158,9 +156,7 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
       decoration: BoxDecoration(
         color: AppColors.primaryLight.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
       ),
       child: const Row(
         children: [
@@ -180,7 +176,6 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
       ),
     );
   }
-
 
   // 2. Card Informasi Pasien
   Widget _buildPatientInfoCard() {
@@ -231,7 +226,11 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.location_on_rounded, color: AppColors.primary, size: 20),
+          const Icon(
+            Icons.location_on_rounded,
+            color: AppColors.primary,
+            size: 20,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -258,7 +257,11 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.local_hospital_rounded, color: AppColors.secondary, size: 20),
+          const Icon(
+            Icons.local_hospital_rounded,
+            color: AppColors.secondary,
+            size: 20,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -366,7 +369,9 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
           Checkbox(
             value: _agreedToTerms,
             activeColor: AppColors.primary,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+            ),
             onChanged: (val) {
               setState(() {
                 _agreedToTerms = val ?? false;
@@ -419,7 +424,9 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
         Expanded(
           flex: 2,
           child: ElevatedButton(
-            onPressed: (_agreedToTerms && !_isSubmitting) ? _confirmAndProceed : null,
+            onPressed: (_agreedToTerms && !_isSubmitting)
+                ? _confirmAndProceed
+                : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -449,7 +456,10 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
                         SizedBox(width: 8),
                         Text(
                           'Konfirmasi Pesanan',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -514,7 +524,11 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.edit_outlined, size: 14, color: AppColors.primary),
+                        Icon(
+                          Icons.edit_outlined,
+                          size: 14,
+                          color: AppColors.primary,
+                        ),
                         SizedBox(width: 4),
                         Text(
                           'Ubah',
