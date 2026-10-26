@@ -5,6 +5,8 @@ import '../../../../core/widgets/stat_card.dart';
 import '../../../../core/widgets/status_badge.dart';
 import 'llm_analysis_detail_page.dart';
 
+import '../../../order_management/presentation/pages/admin_order_page.dart';
+
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
 
@@ -43,10 +45,12 @@ String _selectedSidebarMenu = 'Beranda';
                   child: Column(
                     children: [
                       _buildHeader(isDesktop),
-                      Expanded(
+                                           Expanded(
                         child: _selectedSidebarMenu == 'Beranda'
                             ? _buildDashboardHome(context, isDesktop)
-                            : _buildMenuPlaceholder(context),
+                            : _selectedSidebarMenu == 'Pesanan'
+                                ? OrdersPage() // Memanggil widget dari file admin_order_page.dart
+                                : _buildMenuPlaceholder(context),
                       ),
                     ],
                   ),
@@ -85,16 +89,18 @@ String _selectedSidebarMenu = 'Beranda';
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Dashboard Administrator',
-                    style: TextStyle(
+                  Text(
+                    _selectedSidebarMenu == 'Beranda' 
+                        ? 'Dashboard Administrator' 
+                        : 'Manajemen $_selectedSidebarMenu',
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
                     ),
                   ),
                   Text(
-                    'Jumat, 23 Oktober 2026 • Wilayah Operasional DIY',
+                    'Jumat, 23 Oktober 2026 • Wilayah Operasional Bandar Lampung',
                     style: TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondary,
