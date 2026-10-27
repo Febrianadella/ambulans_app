@@ -10,7 +10,9 @@ import '../../../booking/domain/entities/order_entity.dart';
 import '../../../booking/domain/repositories/booking_repository.dart';
 import '../../../chat/presentation/pages/chat_room_page.dart';
 import '../../../tracking/presentation/pages/live_tracking_page.dart';
-
+import '../../../../core/utils/date_formatter.dart';
+import '../../../../core/utils/order_status_helper.dart';
+import '../../../booking/domain/entities/payment_entity.dart';
 import '../../../booking/presentation/pages/driver_detail_order_page.dart';
 
 class SopirDashboardPage extends StatefulWidget {
@@ -38,6 +40,25 @@ class _SopirDashboardPageState extends State<SopirDashboardPage> {
     'Layanan selesai',
   ];
 
+  // Tambahan State untuk Tab Riwayat
+  int _selectedHistoryFilterIndex = 0; // 0: Semua, 1: Berlangsung, 2: Selesai
+  List<OrderEntity> _orders = [];
+  Map<String, PaymentEntity> _payments = {};
+  bool _isLoading = true;
+
+  // Getter untuk memfilter riwayat pesanan/tugas sopir
+  List<OrderEntity> get _filteredOrders {
+    switch (_selectedHistoryFilterIndex) {
+      case 1: // Berlangsung
+        return _orders.where((o) => o.status != OrderStatus.layananSelesai).toList();
+      case 2: // Selesai
+        return _orders.where((o) => o.status == OrderStatus.layananSelesai).toList();
+      case 0: // Semua
+      default:
+        return _orders;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -61,9 +82,25 @@ class _SopirDashboardPageState extends State<SopirDashboardPage> {
 
   Future<void> _syncActiveTask() async {
     try {
+      // 1. Ambil seluruh data order untuk riwayat
+      final orders = await _repository.getAllOrders();
+      final Map<String, PaymentEntity> paymentsMap = {};
+      for (final order in orders) {
+        final payment = await _repository.getPaymentByOrderId(order.id);
+        if (payment != null) {
+          paymentsMap[order.id] = payment;
+        }
+      }
+
+      // 2. Ambil task aktif untuk step perjalanan (seperti kode asli Anda)
       final order = await _repository.getOrderById('ORD-20261023-01');
       if (!mounted) return;
+      
       setState(() {
+        _orders = orders;
+        _payments = paymentsMap;
+        _isLoading = false;
+        
         switch (order.status) {
           case OrderStatus.menujuLokasi:
             _currentTripStep = 0;
@@ -81,7 +118,10 @@ class _SopirDashboardPageState extends State<SopirDashboardPage> {
             _currentTripStep = 0;
         }
       });
-    } catch (_) {}
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _advanceTripStatus() async {
@@ -128,17 +168,17 @@ class _SopirDashboardPageState extends State<SopirDashboardPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: _currentNavIndex == 0
-            ? _buildHomeTab(context)
-            : _buildOtherTab(context),
+        child: switch (_currentNavIndex) {
+          0 => _buildHomeTab(context),
+          1 => _buildRiwayatTab(context),
+          2 => _buildChatTab(context),
+          3 => _buildProfilTab(context),
+          _ => _buildHomeTab(context),
+        },
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-        },
+        onTap: (index) => setState(() => _currentNavIndex = index),
         type: BottomNavigationBarType.fixed,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textSecondary,
@@ -170,6 +210,236 @@ class _SopirDashboardPageState extends State<SopirDashboardPage> {
       ),
     );
   }
+
+Widget _buildRouteLine({required String pickup, required String destination}) {
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.radio_button_checked, color: AppColors.primary, size: 16),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Titik Jemput', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                  Text(pickup, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        Container(margin: const EdgeInsets.only(left: 7), height: 14, width: 2, color: AppColors.border),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.location_on, color: AppColors.secondary, size: 16),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Rumah Sakit / Faskes Tujuan', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                  Text(destination, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // A. Main Widget Tab Riwayat
+  Widget _buildRiwayatTab(BuildContext context) {
+    final filtered = _filteredOrders;
+    final totalCount = _orders.length;
+    final activeCount = _orders.where((o) => o.status != OrderStatus.layananSelesai).length;
+    final completedCount = _orders.where((o) => o.status == OrderStatus.layananSelesai).length;
+
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: _syncActiveTask,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header Riwayat
+            Container(
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(bottom: BorderSide(color: AppColors.border)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.history_rounded, color: AppColors.primary, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Riwayat Penugasan',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Daftar lengkap seluruh tugas dan riwayat perjalanan Anda',
+                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Filter Tab (Semua, Berlangsung, Selesai)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+              child: Row(
+                children: [
+                  _buildFilterTabItem(title: 'Semua', count: totalCount, index: 0),
+                  const SizedBox(width: 8),
+                  _buildFilterTabItem(title: 'Berlangsung', count: activeCount, index: 1),
+                  const SizedBox(width: 8),
+                  _buildFilterTabItem(title: 'Selesai', count: completedCount, index: 2),
+                ],
+              ),
+            ),
+
+            // Daftar Kartu Riwayat
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                  : filtered.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40),
+                          child: EmptyStateCard(
+                            icon: Icons.history_rounded,
+                            title: 'Belum Ada Penugasan',
+                            message: 'Belum ada riwayat tugas ambulans untuk kategori ini.',
+                            buttonText: 'Muat Ulang',
+                            onButtonPressed: _syncActiveTask,
+                          ),
+                        )
+                      : ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: filtered.length,
+                          separatorBuilder: (context, index) => const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final order = filtered[index];
+                            final payment = _payments[order.id];
+                            final serviceBadge = OrderStatusHelper.getServiceBadge(order, payment);
+                            final paymentBadge = OrderStatusHelper.getPaymentBadge(order, payment);
+
+                            return InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => SopirOrderDetailPage(
+                                      orderId: order.id,
+                                      repository: _repository,
+                                    ),
+                                  ),
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: AppColors.border),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          DateFormatter.formatFull(order.createdAt ?? DateTime.now()),
+                                          style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+                                        ),
+                                        Text('#${order.id}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Wrap(spacing: 6, runSpacing: 6, children: [serviceBadge, paymentBadge]),
+                                    const SizedBox(height: 12),
+                                    _buildRouteLine(
+                                      pickup: order.pickupAddress ?? 'Titik Penjemputan',
+                                      destination: order.destinationAddress ?? 'Rumah Sakit Tujuan',
+                                    ),
+                                    const Divider(height: 20),
+                                    const Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Text('Kelola Tugas', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                                        SizedBox(width: 4),
+                                        Icon(Icons.arrow_forward_rounded, size: 16, color: AppColors.primary),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // B. Helper Filter Tab Item
+  Widget _buildFilterTabItem({required String title, required int count, required int index}) {
+    final isSelected = _selectedHistoryFilterIndex == index;
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _selectedHistoryFilterIndex = index),
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                title,
+                style: TextStyle(fontSize: 12, fontWeight: isSelected ? FontWeight.bold : FontWeight.w600, color: isSelected ? Colors.white : AppColors.textSecondary),
+              ),
+              const SizedBox(width: 4),
+              Text('($count)', style: TextStyle(fontSize: 10, color: isSelected ? Colors.white : AppColors.textPrimary)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // C. Placeholder Tab Chat & Profil (jika belum ada)
+  Widget _buildChatTab(BuildContext context) => const Center(child: Text('Halaman Chat Sopir'));
+  Widget _buildProfilTab(BuildContext context) => const Center(child: Text('Halaman Profil Sopir'));
 
   Widget _buildHomeTab(BuildContext context) {
     return SingleChildScrollView(
