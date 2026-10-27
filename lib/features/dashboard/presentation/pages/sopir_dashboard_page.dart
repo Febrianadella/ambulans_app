@@ -11,6 +11,8 @@ import '../../../booking/domain/repositories/booking_repository.dart';
 import '../../../chat/presentation/pages/chat_room_page.dart';
 import '../../../tracking/presentation/pages/live_tracking_page.dart';
 
+import '../../../booking/presentation/pages/driver_detail_order_page.dart';
+
 class SopirDashboardPage extends StatefulWidget {
   final BookingRepository? bookingRepository;
 
@@ -151,10 +153,6 @@ class _SopirDashboardPageState extends State<SopirDashboardPage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard_rounded),
             label: 'Beranda',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assignment_turned_in_rounded),
-            label: 'Tugas Saya',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.history_rounded),
@@ -346,16 +344,6 @@ class _SopirDashboardPageState extends State<SopirDashboardPage> {
             subtitle: 'Hari ini',
           ),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: StatCard(
-            title: 'Armada',
-            value: 'BBM 85%',
-            icon: Icons.local_gas_station_rounded,
-            color: AppColors.secondary,
-            subtitle: 'AB 1199 MED',
-          ),
-        ),
       ],
     );
   }
@@ -381,7 +369,7 @@ class _SopirDashboardPageState extends State<SopirDashboardPage> {
                 setState(() => _hasActiveTask = !_hasActiveTask);
               },
               child: Text(
-                _hasActiveTask ? 'Simulasi Kosong' : 'Simulasi Ada Tugas',
+                _hasActiveTask ? 'Tugas Selesai' : 'Tugas Aktif',
                 style: const TextStyle(
                   fontSize: 11,
                   color: AppColors.textSecondary,
@@ -444,158 +432,36 @@ class _SopirDashboardPageState extends State<SopirDashboardPage> {
                 ),
                 const SizedBox(height: 14),
 
-                // 5. Peta Rute Navigasi Darurat
-                Container(
-                  height: 110,
+                SizedBox(
                   width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.blueGrey.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Stack(
-                    children: [
-                      Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.map_rounded,
-                              size: 34,
-                              color: Colors.blueGrey.shade400,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Navigasi Rute Cepat: 3.2 km (Est. 8 Menit)',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blueGrey.shade700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Positioned(
-                        right: 8,
-                        bottom: 8,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const LiveTrackingPage(
-                                  orderId: 'ORD-20261023-01',
-                                ),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.secondary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            visualDensity: VisualDensity.compact,
-                          ),
-                          icon: const Icon(Icons.fullscreen, size: 14),
-                          label: const Text(
-                            'Buka Peta',
-                            style: TextStyle(fontSize: 11),
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SopirOrderDetailPage(
+                            orderId: 'ORD-20261023-01',
+                            repository: _repository,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // 6. Tombol Tindakan untuk Memperbarui Status Perjalanan
-                const Text(
-                  'Perbarui Status Perjalanan:',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                // Step Progress Indicator
-                Row(
-                  children: List.generate(_tripSteps.length, (index) {
-                    final isDone = index <= _currentTripStep;
-                    return Expanded(
-                      child: Container(
-                        height: 4,
-                        margin: EdgeInsets.only(
-                          right: index < _tripSteps.length - 1 ? 4 : 0,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isDone ? AppColors.primary : AppColors.border,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-                const SizedBox(height: 12),
-
-                // Action Button to progress status
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _advanceTripStatus,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _currentTripStep == 3
-                              ? AppColors.success
-                              : AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        icon: Icon(
-                          _currentTripStep == 3
-                              ? Icons.check_circle_rounded
-                              : Icons.update_rounded,
-                          size: 16,
-                        ),
-                        label: Text(
-                          _getNextStepActionText(),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.chat_bubble_outline,
-                        color: AppColors.secondary,
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ChatRoomPage(
-                              orderId: 'ORD-20261023-01',
-                              driverName: 'Joko Susilo',
-                              driverPlate: 'AB 1199 MED',
-                              patientName: 'Budi Pratama',
-                              isFromDriver: true,
-                            ),
-                          ),
-                        );
-                      },
+                    icon: const Icon(Icons.visibility_rounded, size: 16),
+                    label: const Text(
+                      'Lihat Detail Lengkap Tugas',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                     ),
-                  ],
+                  ),
                 ),
+                
+                const SizedBox(height: 14),
               ],
             ),
           ),
@@ -751,7 +617,6 @@ class _SopirDashboardPageState extends State<SopirDashboardPage> {
   Widget _buildOtherTab(BuildContext context) {
     final titles = [
       'Beranda',
-      'Tugas Saya',
       'Riwayat Tugas',
       'Chat Komunikasi',
       'Profil Sopir',
